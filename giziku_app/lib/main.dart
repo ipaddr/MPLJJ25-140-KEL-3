@@ -1,8 +1,4 @@
 import 'package:flutter/material.dart';
-import 'screens/login_screen.dart';
-import 'screens/register_screen.dart';
-import 'screens/home_screen.dart';
-import 'screens/menu_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,24 +13,24 @@ class MyApp extends StatelessWidget {
       title: 'Giziku App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: const Color(0xFF016BB8), // Warna utama
+        primaryColor: const Color(0xFF016BB8),
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF016BB8),
           primary: const Color(0xFF016BB8),
-          secondary: const Color(0xFF319FE8), // Warna pendukung 1
-          tertiary: const Color(0xFFFEC972), // Warna pendukung 2
-          surface: const Color(0xFFFEe3B3), // Warna pendukung 3
+          secondary: const Color(0xFF319FE8),
+          tertiary: const Color(0xFFFEC972),
+          surface: const Color(0xFFFEe3B3),
         ),
         useMaterial3: true,
         textTheme: const TextTheme(
-          bodyText1: TextStyle(color: Color(0xFF016BB8)),
+          bodyLarge: TextStyle(color: Color(0xFF016BB8)),
         ),
       ),
       initialRoute: '/login',
       routes: {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
-        '/home': (context) => const HomeScreen(),
+        '/home': (context) => const SwipeNavigator(),
         '/menu': (context) => const MenuScreen(),
       },
     );
@@ -67,7 +63,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFEe3B3), // Warna pendukung 3
+      backgroundColor: const Color(0xFFFEe3B3),
       body: const Center(
         child: Text(
           '🏠 Halaman Home\nGeser ke kiri untuk ke Menu',
@@ -86,7 +82,7 @@ class MenuScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF319FE8), // Warna pendukung 1
+      backgroundColor: const Color(0xFF319FE8),
       body: const Center(
         child: Text(
           '📋 Halaman Menu\nGeser ke kanan untuk kembali',
@@ -137,10 +133,10 @@ class LoginScreen extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                // Aksi login di sini
+                Navigator.pushReplacementNamed(context, '/home');
               },
               style: ElevatedButton.styleFrom(
-                primary: const Color(0xFF016BB8),
+                backgroundColor: const Color(0xFF016BB8),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 100,
                   vertical: 15,
@@ -154,7 +150,6 @@ class LoginScreen extends StatelessWidget {
             const SizedBox(height: 20),
             TextButton(
               onPressed: () {
-                // Arahkan ke halaman register
                 Navigator.pushNamed(context, '/register');
               },
               child: const Text('Belum punya akun? Daftar sekarang!'),
@@ -226,10 +221,10 @@ class RegisterScreen extends StatelessWidget {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                // Aksi register di sini
+                Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
-                primary: const Color(0xFF016BB8),
+                backgroundColor: const Color(0xFF016BB8),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 100,
                   vertical: 15,
@@ -243,7 +238,6 @@ class RegisterScreen extends StatelessWidget {
             const SizedBox(height: 20),
             TextButton(
               onPressed: () {
-                // Arahkan ke halaman login
                 Navigator.pop(context);
               },
               child: const Text('Sudah punya akun? Login sekarang!'),
