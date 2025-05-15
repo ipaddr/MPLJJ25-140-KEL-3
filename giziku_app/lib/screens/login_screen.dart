@@ -6,7 +6,7 @@ class LoginScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF10b68d), // latar belakang hijau baru
+      backgroundColor: const Color(0xFF10b68d),
       appBar: AppBar(
         backgroundColor: const Color(0xFF018175),
         centerTitle: true,
@@ -57,7 +57,20 @@ class LoginScreen extends StatelessWidget {
                     fillColor: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/forgetpassword');
+                    },
+                    child: const Text(
+                      'Lupa Password?',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
                 ElevatedButton(
                   onPressed: () {
                     Navigator.pushNamed(context, '/home');

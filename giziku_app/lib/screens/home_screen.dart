@@ -75,14 +75,17 @@ class HomeScreen extends StatelessWidget {
                     width: 64,
                     height: 64,
                     decoration: BoxDecoration(
-                      color: Colors.grey[400],
                       borderRadius: BorderRadius.circular(12),
+                      image: const DecorationImage(
+                        image: AssetImage('assets/makanan1.jpg'),
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 12),
                   const Expanded(
                     child: Text(
-                      'Deskripsi singkat makanan bergizi untuk hari ini.',
+                      'Nasi, sayur bayam, dan tahu goreng – bergizi dan seimbang untuk kebutuhan harian anak.',
                       style: TextStyle(fontSize: 14),
                     ),
                   ),
@@ -97,24 +100,27 @@ class HomeScreen extends StatelessWidget {
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.6),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                children: const [
-                  Icon(Icons.play_circle_fill, size: 48),
-                  SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      'Pentingnya Makanan Bergizi untuk Anak',
-                      style: TextStyle(fontSize: 14),
+            GestureDetector(
+              onTap: () => Navigator.pushNamed(context, '/edukasi'),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.6),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Row(
+                  children: const [
+                    Icon(Icons.play_circle_fill, size: 48),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Pentingnya Makanan Bergizi untuk Anak',
+                        style: TextStyle(fontSize: 14),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
@@ -135,7 +141,7 @@ class HomeScreen extends StatelessWidget {
             Navigator.pushReplacementNamed(context, '/menu');
           }
           if (index == 1) {
-            Navigator.pushNamed(context, '/add'); // jika ada halaman tambah
+            Navigator.pushNamed(context, '/add');
           }
         },
       ),

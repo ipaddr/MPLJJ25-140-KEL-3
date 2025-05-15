@@ -23,8 +23,8 @@ class MyApp extends StatelessWidget {
           seedColor: const Color(0xFF016BB8),
           primary: const Color(0xFF016BB8),
           secondary: const Color(0xFF319FE8),
-          tertiary: const Color(0xFF018175), // Ganti warna
-          surface: const Color(0xFF10b68d), // Ganti warna
+          tertiary: const Color(0xFF018175),
+          surface: const Color(0xFF10b68d),
         ),
         useMaterial3: true,
       ),
@@ -32,6 +32,9 @@ class MyApp extends StatelessWidget {
       routes: {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
+        '/home': (context) => const HomeScreen(),
+        '/menu': (context) => const MenuScreen(),
+        '/forgetpassword': (context) => const ForgetPasswordScreen(),
       },
     );
   }

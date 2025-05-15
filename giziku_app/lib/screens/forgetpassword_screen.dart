@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-class forgetscreen extends StatelessWidget {
-  const forgetscreen({super.key});
+class ForgetPasswordScreen extends StatelessWidget {
+  const ForgetPasswordScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF10b68d), // latar belakang hijau baru
+      backgroundColor: const Color(0xFF10b68d),
       appBar: AppBar(
         backgroundColor: const Color(0xFF018175),
         centerTitle: true,
@@ -22,7 +22,10 @@ class forgetscreen extends StatelessWidget {
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ),
-        title: const Text('Register', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Lupa Password',
+          style: TextStyle(color: Colors.white),
+        ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -33,18 +36,12 @@ class forgetscreen extends StatelessWidget {
                 const SizedBox(height: 20),
                 Image.asset('assets/logo.png', height: 120),
                 const SizedBox(height: 30),
-                TextField(
-                  decoration: InputDecoration(
-                    labelText: 'Username',
-                    prefixIcon: const Icon(Icons.person),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
+                const Text(
+                  'Masukkan email akun Anda dan kami akan mengirimkan link untuk reset password.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white, fontSize: 16),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 30),
                 TextField(
                   decoration: InputDecoration(
                     labelText: 'Email',
@@ -56,57 +53,31 @@ class forgetscreen extends StatelessWidget {
                     fillColor: Colors.white,
                   ),
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    prefixIcon: const Icon(Icons.lock),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  obscureText: true,
-                  decoration: InputDecoration(
-                    labelText: 'Confirm Password',
-                    prefixIcon: const Icon(Icons.lock),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    filled: true,
-                    fillColor: Colors.white,
-                  ),
-                ),
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () {
-                    // Aksi daftar
+                    // Logika kirim reset password
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Link reset password telah dikirim ke email Anda',
+                        ),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF018175),
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 100,
+                      horizontal: 80,
                       vertical: 15,
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                   ),
-                  child: const Text('Daftar', style: TextStyle(fontSize: 16)),
-                ),
-                const SizedBox(height: 20),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
                   child: const Text(
-                    'Sudah punya akun? Login sekarang!',
-                    style: TextStyle(color: Colors.white),
+                    'Kirim Link',
+                    style: TextStyle(fontSize: 16),
                   ),
                 ),
               ],
