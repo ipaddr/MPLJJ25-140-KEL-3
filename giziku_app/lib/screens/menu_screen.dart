@@ -26,7 +26,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              Image.asset('assets/images/home_banner.png', width: 300),
+              Image.asset('.png', width: 300),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {

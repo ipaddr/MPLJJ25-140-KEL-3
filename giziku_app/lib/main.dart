@@ -56,7 +56,7 @@ class _SwipeNavigatorState extends State<SwipeNavigator> {
   }
 }
 
-// Halaman Home
+// HomeScreen
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -75,7 +75,7 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-// Halaman Menu
+// MenuScreen
 class MenuScreen extends StatelessWidget {
   const MenuScreen({super.key});
 
@@ -94,7 +94,7 @@ class MenuScreen extends StatelessWidget {
   }
 }
 
-// Halaman Login
+// LoginScreen
 class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
@@ -161,7 +161,7 @@ class LoginScreen extends StatelessWidget {
   }
 }
 
-// Halaman Register
+// RegisterScreen
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
 
