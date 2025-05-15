@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+class forgetscreen extends StatelessWidget {
+  const forgetscreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +22,7 @@ class LoginScreen extends StatelessWidget {
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
         ),
-        title: const Text('Login', style: TextStyle(color: Colors.white)),
+        title: const Text('Register', style: TextStyle(color: Colors.white)),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -31,12 +31,24 @@ class LoginScreen extends StatelessWidget {
             child: Column(
               children: [
                 const SizedBox(height: 20),
-                Image.asset('assets/Logo.png', height: 120),
+                Image.asset('assets/logo.png', height: 120),
                 const SizedBox(height: 30),
                 TextField(
                   decoration: InputDecoration(
                     labelText: 'Username',
                     prefixIcon: const Icon(Icons.person),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    prefixIcon: const Icon(Icons.email),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.0),
                     ),
@@ -57,10 +69,23 @@ class LoginScreen extends StatelessWidget {
                     fillColor: Colors.white,
                   ),
                 ),
+                const SizedBox(height: 16),
+                TextField(
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: 'Confirm Password',
+                    prefixIcon: const Icon(Icons.lock),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
+                ),
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/home');
+                    // Aksi daftar
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF018175),
@@ -72,15 +97,15 @@ class LoginScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                   ),
-                  child: const Text('Login', style: TextStyle(fontSize: 16)),
+                  child: const Text('Daftar', style: TextStyle(fontSize: 16)),
                 ),
                 const SizedBox(height: 20),
                 TextButton(
                   onPressed: () {
-                    Navigator.pushNamed(context, '/register');
+                    Navigator.pop(context);
                   },
                   child: const Text(
-                    'Belum punya akun? Daftar sekarang!',
+                    'Sudah punya akun? Login sekarang!',
                     style: TextStyle(color: Colors.white),
                   ),
                 ),
