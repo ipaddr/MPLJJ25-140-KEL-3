@@ -1,0 +1,32 @@
+# Dependensi
+node_modules/
+
+# Variabel lingkungan
+.env
+
+# Log
+logs
+*.log
+npm-debug.log*
+
+# Direktori build
+dist/
+build/
+
+# Direktori coverage
+coverage/
+
+# Firebase
+firebase-debug.log*
+firebase-debug.*.log*
+.firebase/
+
+# IDE
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# Sistem operasi
+.DS_Store
+Thumbs.db
