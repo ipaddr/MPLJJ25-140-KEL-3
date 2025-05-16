@@ -1,47 +1,7 @@
 import 'package:flutter/material.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  final TextEditingController tinggiController = TextEditingController();
-  final TextEditingController beratController = TextEditingController();
-  final TextEditingController umurController = TextEditingController();
-
-  @override
-  void dispose() {
-    tinggiController.dispose();
-    beratController.dispose();
-    umurController.dispose();
-    super.dispose();
-  }
-
-  void cekGizi() {
-    // Contoh fungsi cek gizi, nanti bisa diganti dengan logika yang kamu mau
-    final tinggi = double.tryParse(tinggiController.text);
-    final berat = double.tryParse(beratController.text);
-    final umur = int.tryParse(umurController.text);
-
-    if (tinggi == null || berat == null || umur == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Mohon isi semua data dengan benar')),
-      );
-      return;
-    }
-
-    // Contoh output (bisa diganti dengan kalkulasi sesungguhnya)
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Cek gizi untuk tinggi: $tinggi cm, berat: $berat kg, umur: $umur tahun',
-        ),
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,92 +27,6 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Form input tinggi, berat, umur
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.8),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Column(
-                children: [
-                  TextField(
-                    controller: tinggiController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: 'Tinggi Badan (cm)',
-                      prefixIcon: const Icon(
-                        Icons.height,
-                        color: Color(0xFF018175),
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: beratController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: 'Berat Badan (kg)',
-                      prefixIcon: const Icon(
-                        Icons.monitor_weight,
-                        color: Color(0xFF018175),
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: umurController,
-                    keyboardType: TextInputType.number,
-                    decoration: InputDecoration(
-                      labelText: 'Umur (tahun)',
-                      prefixIcon: const Icon(
-                        Icons.cake,
-                        color: Color(0xFF018175),
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      filled: true,
-                      fillColor: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: cekGizi,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF018175),
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 15,
-                        horizontal: 50,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                    child: const Text(
-                      'Cek Gizi',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
             // Box IMT
             Container(
               width: double.infinity,
