@@ -30,3 +30,5 @@ firebase-debug.*.log*
 # Sistem operasi
 .DS_Store
 Thumbs.db
+
+giziku-serviceAccountKey.json
