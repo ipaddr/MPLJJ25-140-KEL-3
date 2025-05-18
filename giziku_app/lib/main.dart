@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
+
+// Import semua screen
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/menu_screen.dart';
 import 'screens/forgetpassword_screen.dart';
-import 'screens/splash_screen.dart'; // import splash screen
+import 'screens/splash_screen.dart';
+import 'screens/tambah_makanan_screen.dart';
+import 'screens/makanan_ditambahkan_screen.dart'; // import screen baru
 
 void main() {
   runApp(const MyApp());
@@ -32,13 +36,17 @@ class MyApp extends StatelessWidget {
           backgroundColor: Color(0xFF018175),
           centerTitle: true,
           elevation: 0,
-          titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
+          titleTextStyle: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
           iconTheme: IconThemeData(color: Colors.white),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF018175), // warna tombol
-            foregroundColor: Colors.white, // warna teks pada tombol
+            backgroundColor: const Color(0xFF018175),
+            foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 15),
             textStyle: const TextStyle(fontSize: 16),
             shape: RoundedRectangleBorder(
@@ -47,18 +55,35 @@ class MyApp extends StatelessWidget {
           ),
         ),
         textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(
-            foregroundColor: Colors.white, // warna teks untuk TextButton
-          ),
+          style: TextButton.styleFrom(foregroundColor: Colors.white),
         ),
       ),
-      initialRoute: '/splash',  // jadikan splash screen sebagai route awal
+
+      // Splash screen sebagai halaman pertama
+      initialRoute: '/splash',
+
+      // Daftar semua rute aplikasi
       routes: {
-        '/splash': (context) => const SplashScreen(), // route splash screen
+        '/splash': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/home': (context) => const HomeScreen(),
+        '/menu': (context) => const MenuScreen(),
         '/forgetpassword': (context) => const ForgetPasswordScreen(),
+        '/tambahmakanan': (context) => const TambahMakananScreen(),
+        '/makanan_ditambahkan':
+            (context) => const MakananDitambahkanScreen(), // route baru
+      },
+
+      // Jika route tidak ditemukan
+      onUnknownRoute: (settings) {
+        return MaterialPageRoute(
+          builder:
+              (context) => Scaffold(
+                appBar: AppBar(title: const Text('404')),
+                body: const Center(child: Text('Halaman tidak ditemukan')),
+              ),
+        );
       },
     );
   }

@@ -10,17 +10,64 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF018175),
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.white),
-          onPressed: () {
-            Navigator.pushNamed(context, '/menu');
-          },
+        leading: Builder(
+          builder:
+              (context) => IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
         ),
         title: const Text(
           'Beranda',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(color: Color(0xFF016BB8)),
+              child: Text(
+                'Menu',
+                style: TextStyle(color: Colors.white, fontSize: 24),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.monitor_heart),
+              title: const Text('Pemantauan Gizi'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/pemantauan');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.volunteer_activism),
+              title: const Text('Distribusi Bantuan'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/bantuan');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.school),
+              title: const Text('Edukasi'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/edukasi');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.bar_chart),
+              title: const Text('Dashboard Statistik'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/dashboard');
+              },
+            ),
+          ],
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -149,22 +196,74 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFF018175),
-        unselectedItemColor: Colors.grey,
-        currentIndex: 0,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.add), label: ''),
-          BottomNavigationBarItem(icon: Icon(Icons.menu), label: 'More'),
-        ],
-        onTap: (index) {
-          if (index == 1) {
-            Navigator.pushNamed(context, '/add');
-          }
-          // Tombol More tidak diarahkan ke mana-mana
-        },
+      bottomNavigationBar: BottomAppBar(
+        color: Colors.white,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [
+            // Tombol Back
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded),
+                  color: const Color(0xFF018175),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+                const Text(
+                  'Back',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF018175)),
+                ),
+              ],
+            ),
+
+            // Tombol Home (tengah, lebih besar seperti FAB)
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF018175),
+                  ),
+                  child: IconButton(
+                    icon: const Icon(Icons.home),
+                    iconSize: 30,
+                    color: Colors.white,
+                    onPressed: () {
+                      // Sudah di home, atau bisa reload halaman jika perlu
+                    },
+                  ),
+                ),
+                const Text(
+                  'Home',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF018175)),
+                ),
+              ],
+            ),
+
+            // Tombol Tambah Makanan
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline),
+                  color: const Color(0xFF018175),
+                  onPressed: () {
+                    Navigator.of(context).pushNamed('/tambahmakanan');
+                  },
+                ),
+                const Text(
+                  'Tambah',
+                  style: TextStyle(fontSize: 12, color: Color(0xFF018175)),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
