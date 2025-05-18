@@ -1,24 +1,13 @@
 import 'package:flutter/material.dart';
-
-// Import semua screen
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/menu_screen.dart';
 import 'screens/forgetpassword_screen.dart';
-<<<<<<< Updated upstream
-import 'screens/splash_screen.dart';
-import 'screens/tambah_makanan_screen.dart';
-import 'screens/makanan_ditambahkan_screen.dart'; // import screen baru
-=======
 import 'screens/splash_screen.dart'; // import splash screen
 import 'screens/admin_home_screen.dart'; // Import the admin home screen
 import 'screens/admin_dashboard_makanan_screen.dart'; // Import the admin dashboard makanan screen
 import 'screens/admin_kelola_edukasi_screen.dart'; // Import the admin kelola edukasi screen
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
 void main() {
   runApp(const MyApp());
@@ -46,17 +35,13 @@ class MyApp extends StatelessWidget {
           backgroundColor: Color(0xFF018175),
           centerTitle: true,
           elevation: 0,
-          titleTextStyle: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+          titleTextStyle: TextStyle(color: Colors.white, fontSize: 20),
           iconTheme: IconThemeData(color: Colors.white),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF018175),
-            foregroundColor: Colors.white,
+            backgroundColor: Color(0xFF018175), // warna tombol
+            foregroundColor: Colors.white, // warna teks pada tombol
             padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 15),
             textStyle: const TextStyle(fontSize: 16),
             shape: RoundedRectangleBorder(
@@ -65,47 +50,21 @@ class MyApp extends StatelessWidget {
           ),
         ),
         textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(foregroundColor: Colors.white),
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.white, // warna teks untuk TextButton
+          ),
         ),
       ),
-
-      // Splash screen sebagai halaman pertama
-      initialRoute: '/splash',
-
-      // Daftar semua rute aplikasi
+      initialRoute: '/splash',  // jadikan splash screen sebagai route awal
       routes: {
-        '/splash': (context) => const SplashScreen(),
+        '/splash': (context) => const SplashScreen(), // route splash screen
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/home': (context) => const HomeScreen(),
-        '/menu': (context) => const MenuScreen(),
         '/forgetpassword': (context) => const ForgetPasswordScreen(),
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-        '/tambahmakanan': (context) => const TambahMakananScreen(),
-        '/makanan_ditambahkan':
-            (context) => const MakananDitambahkanScreen(), // route baru
-      },
-
-      // Jika route tidak ditemukan
-      onUnknownRoute: (settings) {
-        return MaterialPageRoute(
-          builder:
-              (context) => Scaffold(
-                appBar: AppBar(title: const Text('404')),
-                body: const Center(child: Text('Halaman tidak ditemukan')),
-              ),
-        );
-=======
         '/admin_home': (context) => AdminHomeScreen(), // Add the admin home route
         '/admin_dashboard_makanan': (context) => AdminDashboardMakananScreen(), // Add the admin dashboard makanan route
         '/admin_kelola_edukasi': (context) => AdminKelolaEdukasiScreen(), // Add the admin kelola edukasi route
->>>>>>> Stashed changes
-=======
-        '/admin_home': (context) => AdminHomeScreen(), // Add the admin home route
-        '/admin_dashboard_makanan': (context) => AdminDashboardMakananScreen(), // Add the admin dashboard makanan route
-        '/admin_kelola_edukasi': (context) => AdminKelolaEdukasiScreen(), // Add the admin kelola edukasi route
->>>>>>> Stashed changes
       },
     );
   }
