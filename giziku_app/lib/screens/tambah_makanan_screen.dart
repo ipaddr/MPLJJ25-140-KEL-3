@@ -8,7 +8,6 @@ class TambahMakananScreen extends StatefulWidget {
 }
 
 class _TambahMakananScreenState extends State<TambahMakananScreen> {
-  // Data tipe makanan dan deskripsinya
   final Map<int, String> deskripsiMakanan = {
     1: 'Nasi, Ayam, Telor, Sayur, Buah',
     2: 'Nasi, Ayam, Tahu, Sayur, Buah',
@@ -17,11 +16,24 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
     5: 'Nasi, Ikan, Tahu, Sayur, Buah',
   };
 
+  final Map<int, String> gambarMakanan = {
+    1: 'assets/images/makanan1.png',
+    2: 'assets/images/makanan2.png',
+    3: 'assets/images/makanan3.png',
+    4: 'assets/images/makanan4.png',
+    5: 'assets/images/makanan5.png',
+  };
+
   int selectedTipe = 1;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+
+    // Controller yang update tiap build supaya show deskripsi sesuai selectedTipe
+    final TextEditingController deskripsiController = TextEditingController(
+      text: deskripsiMakanan[selectedTipe] ?? '',
+    );
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -30,120 +42,84 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
         backgroundColor: colorScheme.tertiary,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.menu),
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Pilih Tipe Makanan',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            // Radio pilihan tipe makanan
-            ...deskripsiMakanan.entries.map(
-              (entry) => RadioListTile<int>(
-                title: Text(entry.value),
-                value: entry.key,
-                groupValue: selectedTipe,
-                activeColor: colorScheme.primary,
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() {
-                      selectedTipe = value;
-                    });
-                  }
-                },
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                color: Colors.grey.shade300,
+                image: DecorationImage(
+                  image: AssetImage(gambarMakanan[selectedTipe]!),
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
+            const SizedBox(height: 24),
+
+            DropdownButtonFormField<int>(
+              value: selectedTipe,
+              decoration: const InputDecoration(
+                labelText: 'Tipe Paket',
+                border: UnderlineInputBorder(),
+              ),
+              items:
+                  deskripsiMakanan.entries
+                      .map(
+                        (e) => DropdownMenuItem(
+                          value: e.key,
+                          child: Text('Tipe ${e.key}'),
+                        ),
+                      )
+                      .toList(),
+              onChanged: (val) {
+                if (val != null) {
+                  setState(() {
+                    selectedTipe = val;
+                  });
+                }
+              },
+            ),
+            const SizedBox(height: 16),
+
+            TextFormField(
+              readOnly: true,
+              controller: deskripsiController,
+              decoration: InputDecoration(
+                labelText: 'Detail Paket',
+                border: const UnderlineInputBorder(),
+                suffixIcon: const Icon(Icons.arrow_drop_down),
+              ),
+            ),
+
             const Spacer(),
-            Center(
+
+            SizedBox(
+              width: double.infinity,
+              height: 50,
               child: ElevatedButton(
                 onPressed: () {
+                  // Navigasi ke layar MakananDitambahkan dan kirim data deskripsi
                   Navigator.pushNamed(
                     context,
                     '/makanan_ditambahkan',
                     arguments: deskripsiMakanan[selectedTipe],
                   );
                 },
-                child: const Text('Tambah Makanan'),
+                child: const Text(
+                  'Simpan',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
               ),
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: BottomAppBar(
-        color: Colors.white,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            // Tombol Back
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                  color: const Color(0xFF018175),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                const Text(
-                  'Back',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF018175)),
-                ),
-              ],
-            ),
-
-            // Tombol Home (tengah, lebih besar seperti FAB)
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0xFF018175),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.home),
-                    iconSize: 30,
-                    color: Colors.white,
-                    onPressed: () {
-                      Navigator.popUntil(context, ModalRoute.withName('/home'));
-                    },
-                  ),
-                ),
-                const Text(
-                  'Home',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF018175)),
-                ),
-              ],
-            ),
-
-            // Tombol Tambah Makanan (aktif, tetap di halaman ini)
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.add_circle_outline),
-                  color: const Color(0xFF018175),
-                  onPressed: () {
-                    // Bisa untuk reset pilihan jika ingin
-                    setState(() {
-                      selectedTipe = 1;
-                    });
-                  },
-                ),
-                const Text(
-                  'Tambah',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF018175)),
-                ),
-              ],
             ),
           ],
         ),

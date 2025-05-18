@@ -4,10 +4,22 @@ import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/menu_screen.dart';
 import 'screens/forgetpassword_screen.dart';
+<<<<<<< Updated upstream
 import 'screens/splash_screen.dart'; // import splash screen
 import 'screens/admin_home_screen.dart'; // Import the admin home screen
 import 'screens/admin_dashboard_makanan_screen.dart'; // Import the admin dashboard makanan screen
 import 'screens/admin_kelola_edukasi_screen.dart'; // Import the admin kelola edukasi screen
+=======
+import 'screens/splash_screen.dart';
+import 'screens/tambah_makanan_screen.dart';
+import 'screens/makanan_ditambahkan_screen.dart';
+import 'screens/pemantauan_gizi_screen.dart';
+
+// Import admin screens
+import 'screens/admin_home_screen.dart';
+import 'screens/admin_dashboard_makanan_screen.dart';
+import 'screens/admin_kelola_edukasi_screen.dart';
+>>>>>>> Stashed changes
 
 void main() {
   runApp(const MyApp());
@@ -62,9 +74,34 @@ class MyApp extends StatelessWidget {
         '/register': (context) => const RegisterScreen(),
         '/home': (context) => const HomeScreen(),
         '/forgetpassword': (context) => const ForgetPasswordScreen(),
+<<<<<<< Updated upstream
         '/admin_home': (context) => AdminHomeScreen(), // Add the admin home route
         '/admin_dashboard_makanan': (context) => AdminDashboardMakananScreen(), // Add the admin dashboard makanan route
         '/admin_kelola_edukasi': (context) => AdminKelolaEdukasiScreen(), // Add the admin kelola edukasi route
+=======
+        '/pemantauan_gizi': (context) => const PemantauanGiziScreen(),
+
+        // User routes
+        '/tambahmakanan': (context) => const TambahMakananScreen(),
+        '/makanan_ditambahkan': (context) => const MakananDitambahkanScreen(),
+
+        // Admin routes
+        '/admin_home': (context) => const AdminHomeScreen(),
+        '/admin_dashboard_makanan':
+            (context) => const AdminDashboardMakananScreen(),
+        '/admin_kelola_edukasi': (context) => const AdminKelolaEdukasiScreen(),
+      },
+
+      // Jika route tidak ditemukan
+      onUnknownRoute: (settings) {
+        return MaterialPageRoute(
+          builder:
+              (context) => Scaffold(
+                appBar: AppBar(title: const Text('404')),
+                body: const Center(child: Text('Halaman tidak ditemukan')),
+              ),
+        );
+>>>>>>> Stashed changes
       },
     );
   }

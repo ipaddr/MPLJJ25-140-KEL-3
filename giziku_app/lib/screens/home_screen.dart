@@ -39,7 +39,7 @@ class HomeScreen extends StatelessWidget {
               title: const Text('Pemantauan Gizi'),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, '/pemantauan');
+                Navigator.pushNamed(context, '/pemantauan_gizi');
               },
             ),
             ListTile(

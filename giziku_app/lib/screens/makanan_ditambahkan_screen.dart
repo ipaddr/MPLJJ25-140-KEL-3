@@ -5,7 +5,6 @@ class MakananDitambahkanScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Terima data deskripsi makanan dari route arguments
     final String? deskripsi =
         ModalRoute.of(context)?.settings.arguments as String?;
 
