@@ -6,9 +6,16 @@ import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/menu_screen.dart';
 import 'screens/forgetpassword_screen.dart';
+<<<<<<< Updated upstream
 import 'screens/splash_screen.dart';
 import 'screens/tambah_makanan_screen.dart';
 import 'screens/makanan_ditambahkan_screen.dart'; // import screen baru
+=======
+import 'screens/splash_screen.dart'; // import splash screen
+import 'screens/admin_home_screen.dart'; // Import the admin home screen
+import 'screens/admin_dashboard_makanan_screen.dart'; // Import the admin dashboard makanan screen
+import 'screens/admin_kelola_edukasi_screen.dart'; // Import the admin kelola edukasi screen
+>>>>>>> Stashed changes
 
 void main() {
   runApp(const MyApp());
@@ -70,6 +77,7 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const HomeScreen(),
         '/menu': (context) => const MenuScreen(),
         '/forgetpassword': (context) => const ForgetPasswordScreen(),
+<<<<<<< Updated upstream
         '/tambahmakanan': (context) => const TambahMakananScreen(),
         '/makanan_ditambahkan':
             (context) => const MakananDitambahkanScreen(), // route baru
@@ -84,6 +92,11 @@ class MyApp extends StatelessWidget {
                 body: const Center(child: Text('Halaman tidak ditemukan')),
               ),
         );
+=======
+        '/admin_home': (context) => AdminHomeScreen(), // Add the admin home route
+        '/admin_dashboard_makanan': (context) => AdminDashboardMakananScreen(), // Add the admin dashboard makanan route
+        '/admin_kelola_edukasi': (context) => AdminKelolaEdukasiScreen(), // Add the admin kelola edukasi route
+>>>>>>> Stashed changes
       },
     );
   }

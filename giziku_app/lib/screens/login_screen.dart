@@ -31,10 +31,17 @@ class _LoginScreenState extends State<LoginScreen> {
         setState(() {
           _isLoading = false;
         });
-        Navigator.pushNamed(context, '/home');
+
+        // Admin Login Logic: Check if the entered credentials match admin credentials
+        if (_usernameController.text == 'admin' && _passwordController.text == 'admin') {
+          Navigator.pushReplacementNamed(context, '/admin_home'); // Navigate to admin home
+        } else {
+          Navigator.pushReplacementNamed(context, '/home'); // Navigate to regular user home
+        }
       });
     }
   }
+
 
   @override
   Widget build(BuildContext context) {
