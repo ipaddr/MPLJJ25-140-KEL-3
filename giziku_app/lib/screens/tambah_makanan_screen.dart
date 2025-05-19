@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 class TambahMakananScreen extends StatefulWidget {
   const TambahMakananScreen({super.key});
@@ -25,15 +26,46 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
   };
 
   int selectedTipe = 1;
+  late TextEditingController deskripsiController;
+  final TextEditingController tanggalController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    deskripsiController = TextEditingController(
+      text: deskripsiMakanan[selectedTipe] ?? '',
+    );
+  }
+
+  @override
+  void dispose() {
+    deskripsiController.dispose();
+    tanggalController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pilihTanggal(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+    if (picked != null) {
+      setState(() {
+        tanggalController.text = DateFormat(
+          'dd MMMM yyyy',
+          'id_ID',
+        ).format(picked);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    // Controller yang update tiap build supaya show deskripsi sesuai selectedTipe
-    final TextEditingController deskripsiController = TextEditingController(
-      text: deskripsiMakanan[selectedTipe] ?? '',
-    );
+    deskripsiController.text = deskripsiMakanan[selectedTipe] ?? '';
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -73,14 +105,12 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
                 border: UnderlineInputBorder(),
               ),
               items:
-                  deskripsiMakanan.entries
-                      .map(
-                        (e) => DropdownMenuItem(
-                          value: e.key,
-                          child: Text('Tipe ${e.key}'),
-                        ),
-                      )
-                      .toList(),
+                  deskripsiMakanan.entries.map((e) {
+                    return DropdownMenuItem(
+                      value: e.key,
+                      child: Text('Tipe ${e.key}'),
+                    );
+                  }).toList(),
               onChanged: (val) {
                 if (val != null) {
                   setState(() {
@@ -94,10 +124,22 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
             TextFormField(
               readOnly: true,
               controller: deskripsiController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: 'Detail Paket',
-                border: const UnderlineInputBorder(),
-                suffixIcon: const Icon(Icons.arrow_drop_down),
+                border: UnderlineInputBorder(),
+                suffixIcon: Icon(Icons.info_outline),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            TextFormField(
+              readOnly: true,
+              controller: tanggalController,
+              onTap: () => _pilihTanggal(context),
+              decoration: const InputDecoration(
+                labelText: 'Tanggal',
+                border: UnderlineInputBorder(),
+                suffixIcon: Icon(Icons.calendar_today),
               ),
             ),
 
@@ -108,11 +150,13 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
               height: 50,
               child: ElevatedButton(
                 onPressed: () {
-                  // Navigasi ke layar MakananDitambahkan dan kirim data deskripsi
                   Navigator.pushNamed(
                     context,
                     '/makanan_ditambahkan',
-                    arguments: deskripsiMakanan[selectedTipe],
+                    arguments: {
+                      'deskripsi': deskripsiMakanan[selectedTipe],
+                      'tanggal': tanggalController.text,
+                    },
                   );
                 },
                 child: const Text(

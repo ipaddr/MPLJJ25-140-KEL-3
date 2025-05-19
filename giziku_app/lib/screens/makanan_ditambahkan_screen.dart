@@ -5,8 +5,10 @@ class MakananDitambahkanScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final String? deskripsi =
-        ModalRoute.of(context)?.settings.arguments as String?;
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    final String? deskripsi = args?['deskripsi'] as String?;
+    final String? tanggal = args?['tanggal'] as String?;
 
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -46,10 +48,17 @@ class MakananDitambahkanScreen extends StatelessWidget {
                   style: const TextStyle(fontSize: 16, color: Colors.black87),
                   textAlign: TextAlign.center,
                 ),
+              if (tanggal != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Tanggal: $tanggal',
+                  style: const TextStyle(fontSize: 16, color: Colors.black54),
+                  textAlign: TextAlign.center,
+                ),
+              ],
               const SizedBox(height: 40),
               ElevatedButton(
                 onPressed: () {
-                  // Kembali ke home dan buang semua route sebelumnya
                   Navigator.popUntil(context, ModalRoute.withName('/home'));
                 },
                 child: const Text('Selesai'),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
+
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';
@@ -9,12 +11,17 @@ import 'screens/tambah_makanan_screen.dart';
 import 'screens/makanan_ditambahkan_screen.dart';
 import 'screens/pemantauan_gizi_screen.dart';
 
-// Import admin screens
+// Admin screens
 import 'screens/admin_home_screen.dart';
 import 'screens/admin_dashboard_makanan_screen.dart';
 import 'screens/admin_kelola_edukasi_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting(
+    'id_ID',
+    null,
+  ); // Penting untuk tanggal Bahasa Indonesia
   runApp(const MyApp());
 }
 
@@ -45,7 +52,7 @@ class MyApp extends StatelessWidget {
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFF018175),
+            backgroundColor: const Color(0xFF018175),
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 100, vertical: 15),
             textStyle: const TextStyle(fontSize: 16),
