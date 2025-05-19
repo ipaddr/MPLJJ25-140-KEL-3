@@ -12,6 +12,7 @@ import 'screens/makanan_ditambahkan_screen.dart';
 import 'screens/pemantauan_gizi_screen.dart';
 import 'screens/riwayat_ambil_makanan_screen.dart';
 import 'screens/riwayat_cek_gizi_screen.dart';
+import 'screens/dashboard_statistik_screen.dart';
 
 // Admin screens
 import 'screens/admin_home_screen.dart';
@@ -81,6 +82,7 @@ class MyApp extends StatelessWidget {
             (context) => const RiwayatAmbilMakananScreen(),
         '/riwayat_cek_gizi': (context) => const RiwayatCekGiziScreen(),
         '/edukasi': (context) => const EdukasiScreen(),
+        '/dashboard': (context) => DashboardStatistikScreen(),
 
         // Admin routes
         '/admin_home': (context) => const AdminHomeScreen(),
