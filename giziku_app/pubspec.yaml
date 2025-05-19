@@ -23,4 +23,3 @@ flutter:
 
   assets:
     - assets/logo.png
-    - assets/images/       # <-- Pastikan folder gambar makanan ada dan dimuat

@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+class EdukasiScreen extends StatelessWidget {
+  const EdukasiScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Contoh data video edukasi dan artikel
+    final List<String> videoList = [
+      'Video Edukasi 1',
+      'Video Edukasi 2',
+      'Video Edukasi 3',
+      'Video Edukasi 4',
+    ];
+
+    final List<String> artikelList = ['Artikel 1', 'Artikel 2', 'Artikel 3'];
+
     return Scaffold(
-      backgroundColor: const Color(0xFF10b68d),
+      backgroundColor: const Color(
+        0xFFFDE9E9,
+      ), // warna background seperti desain
       appBar: AppBar(
         backgroundColor: const Color(0xFF018175),
         elevation: 0,
@@ -18,7 +30,7 @@ class HomeScreen extends StatelessWidget {
               ),
         ),
         title: const Text(
-          'Beranda',
+          'Edukasi',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -55,7 +67,7 @@ class HomeScreen extends StatelessWidget {
               title: const Text('Edukasi'),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, '/edukasi');
+                // sudah di halaman edukasi, tidak perlu navigasi ulang
               },
             ),
             ListTile(
@@ -77,128 +89,92 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Box IMT
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.8),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Normal',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF018175),
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'IMT (Indeks Massa Tubuh):\n18,5 kg/m²',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Color(0xFF018175),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Icon(Icons.show_chart, size: 48, color: Color(0xFF018175)),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Rekomendasi Makanan
-            const Text(
-              'Rekomendasi Makanan Hari ini',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: Color(0xFF018175),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.8),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      image: const DecorationImage(
-                        image: AssetImage('assets/makanan1.jpg'),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Text(
-                      'Nasi, sayur bayam, dan tahu goreng – bergizi dan seimbang untuk kebutuhan harian anak.',
-                      style: TextStyle(fontSize: 14, color: Colors.black87),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Edukasi
-            const Text(
-              'Edukasi',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-                color: Color(0xFF018175),
-              ),
-            ),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: () => Navigator.pushNamed(context, '/edukasi'),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.8),
-                  borderRadius: BorderRadius.circular(20),
+            // Grid Video Edukasi 2x2
+            Expanded(
+              flex: 3,
+              child: GridView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: videoList.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2, // 2 kolom
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 1,
                 ),
-                child: Row(
-                  children: const [
-                    Icon(
-                      Icons.play_circle_fill,
-                      size: 48,
+                itemBuilder: (context, index) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.6),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.play_arrow,
+                        size: 48,
+                        color: Color(0xFF018175),
+                      ),
+                      onPressed: () {
+                        // aksi saat video ditekan, misal buka detail atau play
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Header Artikel dengan "Lihat Semua"
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Artikel',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    color: Color(0xFF018175),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    // navigasi ke halaman artikel lengkap
+                    Navigator.pushNamed(context, '/artikel_lengkap');
+                  },
+                  child: const Text(
+                    'Lihat Semua',
+                    style: TextStyle(color: Color(0xFF018175)),
+                  ),
+                ),
+              ],
+            ),
+
+            // List Artikel
+            Expanded(
+              flex: 2,
+              child: ListView.separated(
+                itemCount: artikelList.length,
+                separatorBuilder: (_, __) => const Divider(),
+                itemBuilder: (context, index) {
+                  return ListTile(
+                    title: Text(
+                      artikelList[index],
+                      style: const TextStyle(color: Colors.black87),
+                    ),
+                    trailing: const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
                       color: Color(0xFF018175),
                     ),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Pentingnya Makanan Bergizi untuk Anak',
-                        style: TextStyle(fontSize: 14, color: Colors.black87),
-                      ),
-                    ),
-                  ],
-                ),
+                    onTap: () {
+                      // aksi membuka detail artikel
+                    },
+                  );
+                },
               ),
             ),
           ],
@@ -242,7 +218,11 @@ class HomeScreen extends StatelessWidget {
                     iconSize: 30,
                     color: Colors.white,
                     onPressed: () {
-                      // Sudah di home
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/home',
+                        (route) => false,
+                      );
                     },
                   ),
                 ),
@@ -261,7 +241,7 @@ class HomeScreen extends StatelessWidget {
                   icon: const Icon(Icons.add_circle_outline),
                   color: const Color(0xFF018175),
                   onPressed: () {
-                    Navigator.of(context).pushNamed('/tambahmakanan');
+                    Navigator.pushNamed(context, '/tambahmakanan');
                   },
                 ),
                 const Text(

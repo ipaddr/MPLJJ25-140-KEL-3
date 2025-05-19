@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
-
+//User screens
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';
-import 'screens/menu_screen.dart';
+import 'screens/EdukasiScreen.dart';
 import 'screens/forgetpassword_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/tambah_makanan_screen.dart';
 import 'screens/makanan_ditambahkan_screen.dart';
 import 'screens/pemantauan_gizi_screen.dart';
+import 'screens/riwayat_ambil_makanan_screen.dart';
+import 'screens/riwayat_cek_gizi_screen.dart';
 
 // Admin screens
 import 'screens/admin_home_screen.dart';
@@ -71,11 +73,14 @@ class MyApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/home': (context) => const HomeScreen(),
-        '/menu': (context) => const MenuScreen(),
         '/forgetpassword': (context) => const ForgetPasswordScreen(),
         '/pemantauan_gizi': (context) => const PemantauanGiziScreen(),
         '/tambahmakanan': (context) => const TambahMakananScreen(),
         '/makanan_ditambahkan': (context) => const MakananDitambahkanScreen(),
+        '/riwayat_ambil_makanan':
+            (context) => const RiwayatAmbilMakananScreen(),
+        '/riwayat_cek_gizi': (context) => const RiwayatCekGiziScreen(),
+        '/edukasi': (context) => const EdukasiScreen(),
 
         // Admin routes
         '/admin_home': (context) => const AdminHomeScreen(),
