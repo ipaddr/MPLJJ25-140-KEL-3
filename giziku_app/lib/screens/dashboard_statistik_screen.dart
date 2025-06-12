@@ -23,7 +23,7 @@ class DashboardStatistikScreen extends StatelessWidget {
     },
   ];
 
-  const DashboardStatistikScreen({super.key});
+  DashboardStatistikScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
