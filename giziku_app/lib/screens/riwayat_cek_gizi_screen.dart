@@ -26,7 +26,7 @@ class RiwayatCekGiziScreen extends StatelessWidget {
       },
     ];
 
-    Color _getColor(String status) {
+    Color getColor(String status) {
       switch (status) {
         case 'Normal':
           return Colors.green;
@@ -140,7 +140,7 @@ class RiwayatCekGiziScreen extends StatelessWidget {
                   Text(
                     'Hasil: ${data['hasil']}',
                     style: TextStyle(
-                      color: _getColor(data['hasil']!),
+                      color: getColor(data['hasil']!),
                       fontWeight: FontWeight.bold,
                     ),
                   ),

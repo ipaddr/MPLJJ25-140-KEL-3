@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:giziku_app/screens/admin_bottom_navigation_bar.dart';
 
 class AdminHomeScreen extends StatefulWidget {
-  const AdminHomeScreen({Key? key}) : super(key: key);
+  const AdminHomeScreen({super.key});
 
   @override
   _AdminHomeScreenState createState() => _AdminHomeScreenState();

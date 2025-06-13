@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:giziku_app/screens/admin_bottom_navigation_bar.dart';
 
 class AdminDashboardMakananScreen extends StatefulWidget {
-  const AdminDashboardMakananScreen({Key? key}) : super(key: key);
+  const AdminDashboardMakananScreen({super.key});
 
   @override
   State<AdminDashboardMakananScreen> createState() =>

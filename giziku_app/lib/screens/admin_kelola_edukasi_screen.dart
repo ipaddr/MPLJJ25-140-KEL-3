@@ -3,7 +3,7 @@ import 'package:giziku_app/screens/admin_bottom_navigation_bar.dart';
 
 
 class AdminKelolaEdukasiScreen extends StatefulWidget {
-  const AdminKelolaEdukasiScreen({Key? key}) : super(key: key);
+  const AdminKelolaEdukasiScreen({super.key});
 
   @override
   _AdminKelolaEdukasiScreenState createState() =>

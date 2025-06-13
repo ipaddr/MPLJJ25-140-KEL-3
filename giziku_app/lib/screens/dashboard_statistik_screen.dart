@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 class StatistikBadanChart extends StatelessWidget {
   const StatistikBadanChart({super.key});
 
+  DashboardStatistikScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     // Di sini Anda akan mengganti data statis ini dengan data dari pengguna Anda
