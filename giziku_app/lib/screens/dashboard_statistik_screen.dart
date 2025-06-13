@@ -1,129 +1,104 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-class DashboardStatistikScreen extends StatelessWidget {
-  final List<Map<String, dynamic>> dataGizi = [
-    {
-      'tanggal': DateTime(2025, 5, 10),
-      'berat': 21.0,
-      'tinggi': 115.0,
-      'status': 'Normal',
-    },
-    {
-      'tanggal': DateTime(2025, 4, 12),
-      'berat': 18.5,
-      'tinggi': 110.0,
-      'status': 'Kurang',
-    },
-    {
-      'tanggal': DateTime(2025, 3, 14),
-      'berat': 25.2,
-      'tinggi': 118.0,
-      'status': 'Berlebih',
-    },
-  ];
+// Widget khusus untuk menampilkan grafik statistik badan
+class StatistikBadanChart extends StatelessWidget {
+  const StatistikBadanChart({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Statistik Gizi Anak')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            const Text(
-              'Perkembangan Berat Badan',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+    // Di sini Anda akan mengganti data statis ini dengan data dari pengguna Anda
+    final List<FlSpot> dummyData = [
+      FlSpot(150, 50),
+      FlSpot(160, 58),
+      FlSpot(170, 65),
+      FlSpot(175, 72),
+      FlSpot(180, 78),
+    ];
+
+    return LineChart(
+      LineChartData(
+        // Batas sumbu X (Tinggi Badan) dan Y (Berat Badan)
+        minX: 0,
+        maxX: 200,
+        minY: 0,
+        maxY: 100,
+
+        // Konfigurasi Garis Judul (Sumbu X dan Y)
+        titlesData: FlTitlesData(
+          show: true,
+          // Judul Sumbu Bawah (Tinggi Badan)
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 30,
+              interval: 20, // Kelipatan 20 untuk tinggi badan
+              getTitlesWidget: (value, meta) {
+                return SideTitleWidget(
+                  axisSide: meta.axisSide,
+                  space: 8.0,
+                  child: Text(value.toInt().toString(),
+                      style: TextStyle(color: Colors.black54, fontSize: 12)),
+                );
+              },
             ),
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 250,
-              child: BarChart(
-                BarChartData(
-                  barGroups:
-                      dataGizi.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final data = entry.value;
-                        return BarChartGroupData(
-                          x: index,
-                          barRods: [
-                            BarChartRodData(
-                              toY: data['berat'],
-                              color: Colors.blue,
-                              width: 20,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ],
-                        );
-                      }).toList(),
-                  titlesData: FlTitlesData(
-                    leftTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: true),
-                    ),
-                    bottomTitles: AxisTitles(
-                      sideTitles: SideTitles(
-                        showTitles: true,
-                        getTitlesWidget: (value, meta) {
-                          final int index = value.toInt();
-                          if (index >= 0 && index < dataGizi.length) {
-                            final date = dataGizi[index]['tanggal'] as DateTime;
-                            return Text(
-                              '${date.month}/${date.year % 100}',
-                              style: const TextStyle(fontSize: 10),
-                            );
-                          }
-                          return const Text('');
-                        },
-                      ),
-                    ),
-                    topTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                    rightTitles: AxisTitles(
-                      sideTitles: SideTitles(showTitles: false),
-                    ),
-                  ),
-                  borderData: FlBorderData(show: false),
-                  gridData: FlGridData(show: false),
-                ),
-              ),
+          ),
+          // Judul Sumbu Kiri (Berat Badan)
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 40,
+              interval: 10, // Kelipatan 10 untuk berat badan
+              getTitlesWidget: (value, meta) {
+                return SideTitleWidget(
+                  axisSide: meta.axisSide,
+                  space: 8.0,
+                  child: Text(value.toInt().toString(),
+                      style: TextStyle(color: Colors.black54, fontSize: 12)),
+                );
+              },
             ),
-            const SizedBox(height: 30),
-            const Text(
-              'Detail Data Gizi',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Expanded(
-              child: ListView.builder(
-                itemCount: dataGizi.length,
-                itemBuilder: (context, index) {
-                  final data = dataGizi[index];
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    child: ListTile(
-                      title: Text(
-                        '${data['tanggal'].day}/${data['tanggal'].month}/${data['tanggal'].year}',
-                      ),
-                      subtitle: Text(
-                        'Berat: ${data['berat']} kg, Tinggi: ${data['tinggi']} cm\nStatus: ${data['status']}',
-                      ),
-                      leading: Icon(
-                        Icons.monitor_weight,
-                        color:
-                            data['status'] == 'Normal'
-                                ? Colors.green
-                                : data['status'] == 'Kurang'
-                                ? Colors.orange
-                                : Colors.red,
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
+          ),
+          // Menonaktifkan judul atas dan kanan
+          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
         ),
+
+        // Konfigurasi Garis Grid
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: true,
+          drawHorizontalLine: true,
+          verticalInterval: 20,
+          horizontalInterval: 10,
+          getDrawingHorizontalLine: (value) =>
+              const FlLine(color: Colors.black12, strokeWidth: 1),
+          getDrawingVerticalLine: (value) =>
+              const FlLine(color: Colors.black12, strokeWidth: 1),
+        ),
+
+        // Konfigurasi Border Grafik
+        borderData: FlBorderData(
+          show: true,
+          border: Border.all(color: Colors.black26, width: 1),
+        ),
+
+        // Data Garis Grafik
+        lineBarsData: [
+          LineChartBarData(
+            spots: dummyData, // Gunakan data Anda di sini
+            isCurved: true,
+            color: Theme.of(context)
+                .primaryColor, // Menggunakan warna utama dari tema Anda
+            barWidth: 4,
+            isStrokeCapRound: true,
+            dotData: const FlDotData(show: true),
+            belowBarData: BarAreaData(
+              show: true,
+              color: Theme.of(context).primaryColor.withOpacity(0.2),
+            ),
+          )
+        ],
       ),
     );
   }

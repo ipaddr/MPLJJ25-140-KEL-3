@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:giziku_app/screens/profil_screen.dart';
 import 'package:intl/date_symbol_data_local.dart';
 //User screens
 import 'screens/login_screen.dart';
@@ -78,25 +79,25 @@ class MyApp extends StatelessWidget {
         '/pemantauan_gizi': (context) => const PemantauanGiziScreen(),
         '/tambahmakanan': (context) => const TambahMakananScreen(),
         '/makanan_ditambahkan': (context) => const MakananDitambahkanScreen(),
-        '/riwayat_ambil_makanan':
-            (context) => const RiwayatAmbilMakananScreen(),
+        '/riwayat_ambil_makanan': (context) =>
+            const RiwayatAmbilMakananScreen(),
         '/riwayat_cek_gizi': (context) => const RiwayatCekGiziScreen(),
         '/edukasi': (context) => const EdukasiScreen(),
-        '/dashboard': (context) => DashboardStatistikScreen(),
+        '/dashboard': (context) => const StatistikBadanChart(),
+        '/profile': (context) => const ProfileScreen(),
 
         // Admin routes
         '/admin_home': (context) => const AdminHomeScreen(),
-        '/admin_dashboard_makanan':
-            (context) => const AdminDashboardMakananScreen(),
+        '/admin_dashboard_makanan': (context) =>
+            const AdminDashboardMakananScreen(),
         '/admin_kelola_edukasi': (context) => const AdminKelolaEdukasiScreen(),
       },
       onUnknownRoute: (settings) {
         return MaterialPageRoute(
-          builder:
-              (context) => Scaffold(
-                appBar: AppBar(title: const Text('404')),
-                body: const Center(child: Text('Halaman tidak ditemukan')),
-              ),
+          builder: (context) => Scaffold(
+            appBar: AppBar(title: const Text('404')),
+            body: const Center(child: Text('Halaman tidak ditemukan')),
+          ),
         );
       },
     );

@@ -33,8 +33,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
-    // Kamu bisa tambah validasi email, NIK, dsb di sini jika perlu
-
     // Kalau lolos validasi
     setState(() {
       errorMessage = null;

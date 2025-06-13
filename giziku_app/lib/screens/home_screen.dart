@@ -34,6 +34,16 @@ class HomeScreen extends StatelessWidget {
                 style: TextStyle(color: Colors.white, fontSize: 24),
               ),
             ),
+            // --- MENU PROFIL DITAMBAHKAN DI SINI ---
+            ListTile(
+              leading: const Icon(Icons.person_outline),
+              title: const Text('Profil'),
+              onTap: () {
+                Navigator.pop(context); // Tutup drawer terlebih dahulu
+                Navigator.pushNamed(context, '/profile');
+              },
+            ),
+            const Divider(), // Menambah garis pemisah
             ListTile(
               leading: const Icon(Icons.monitor_heart),
               title: const Text('Pemantauan Gizi'),
@@ -217,7 +227,10 @@ class HomeScreen extends StatelessWidget {
                   icon: const Icon(Icons.arrow_back_ios_new_rounded),
                   color: const Color(0xFF018175),
                   onPressed: () {
-                    Navigator.pop(context);
+                    // Cek jika bisa kembali, maka kembali. Jika tidak, jangan lakukan apa-apa.
+                    if (Navigator.canPop(context)) {
+                      Navigator.pop(context);
+                    }
                   },
                 ),
                 const Text(
@@ -242,7 +255,7 @@ class HomeScreen extends StatelessWidget {
                     iconSize: 30,
                     color: Colors.white,
                     onPressed: () {
-                      // Sudah di home
+                      // Sudah di home, tidak perlu aksi
                     },
                   ),
                 ),
