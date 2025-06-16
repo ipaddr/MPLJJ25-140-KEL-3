@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:giziku_app/screens/artikel_lengkap_screen.dart';
 
 class EdukasiScreen extends StatelessWidget {
-  const EdukasiScreen({super.key});
+ EdukasiScreen({super.key});
+
+  // Contoh data video edukasi dan artikel
+  final List<String> videoList = [
+    'Video Edukasi 1',
+    'Video Edukasi 2',
+    'Video Edukasi 3',
+    'Video Edukasi 4',
+  ];
+
+  final List<Map<String, String>> artikelList = const [
+    {'title': 'Artikel 1', 'content': 'Konten lengkap Artikel 1'},
+    {'title': 'Artikel 2', 'content': 'Konten lengkap Artikel 2'},
+    {'title': 'Artikel 3', 'content': 'Konten lengkap Artikel 3'},
+  ];
 
   @override
   Widget build(BuildContext context) {
-    // Contoh data video edukasi dan artikel
-    final List<String> videoList = [
-      'Video Edukasi 1',
-      'Video Edukasi 2',
-      'Video Edukasi 3',
-      'Video Edukasi 4',
-    ];
-
-    final List<String> artikelList = ['Artikel 1', 'Artikel 2', 'Artikel 3'];
-
     return Scaffold(
       backgroundColor: const Color(
         0xFFFDE9E9,
@@ -22,12 +27,10 @@ class EdukasiScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF018175),
         elevation: 0,
-        leading: Builder(
-          builder:
-              (context) => IconButton(
-                icon: const Icon(Icons.menu, color: Colors.white),
-                onPressed: () => Scaffold.of(context).openDrawer(),
-              ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+
         ),
         title: const Text(
           'Edukasi',
@@ -142,9 +145,11 @@ class EdukasiScreen extends StatelessWidget {
                 ),
                 TextButton(
                   onPressed: () {
-                    // navigasi ke halaman artikel lengkap
-                    Navigator.pushNamed(context, '/artikel_lengkap');
-                  },
+                    // Navigasi ke halaman artikel lengkap dengan membawa data artikelList
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => ArtikelLengkapScreen(artikelList: artikelList)),
+                    );                  },
                   child: const Text(
                     'Lihat Semua',
                     style: TextStyle(color: Color(0xFF018175)),
@@ -162,7 +167,7 @@ class EdukasiScreen extends StatelessWidget {
                 itemBuilder: (context, index) {
                   return ListTile(
                     title: Text(
-                      artikelList[index],
+ artikelList[index]['title']!,
                       style: const TextStyle(color: Colors.black87),
                     ),
                     trailing: const Icon(

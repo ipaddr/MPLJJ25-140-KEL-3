@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:giziku_app/screens/profil_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/date_symbol_data_local.dart';
 //User screens
+import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';
@@ -22,6 +24,7 @@ import 'screens/admin_kelola_edukasi_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await initializeDateFormatting(
     'id_ID',
     null,
@@ -82,7 +85,7 @@ class MyApp extends StatelessWidget {
         '/riwayat_ambil_makanan': (context) =>
             const RiwayatAmbilMakananScreen(),
         '/riwayat_cek_gizi': (context) => const RiwayatCekGiziScreen(),
-        '/edukasi': (context) => const EdukasiScreen(),
+        '/edukasi': (context) => EdukasiScreen(),
         '/dashboard': (context) => const StatistikBadanChart(),
         '/profile': (context) => const ProfileScreen(),
 

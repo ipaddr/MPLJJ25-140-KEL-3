@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -15,11 +17,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController teleponController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
+  bool _isLoading = false;
   String? errorMessage;
 
-  void daftar() {
+  Future<void> daftar() async {
     setState(() {
       errorMessage = null;
+      _isLoading = true;
     });
 
     if (namaController.text.isEmpty ||
@@ -27,27 +31,90 @@ class _RegisterScreenState extends State<RegisterScreen> {
         emailController.text.isEmpty ||
         teleponController.text.isEmpty ||
         passwordController.text.isEmpty) {
-      setState(() {
-        errorMessage = 'Semua field harus diisi!';
-      });
+      if (mounted) {
+        setState(() {
+          errorMessage = 'Semua field harus diisi!';
+          _isLoading = false;
+        });
+      }
       return;
     }
+    try {
+      UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+              email: emailController.text.trim(),
+              password: passwordController.text);
 
-    // Kalau lolos validasi
-    setState(() {
-      errorMessage = null;
-    });
+      User? user = userCredential.user;
 
-    // Contoh aksi setelah validasi
-    print('Daftar berhasil!');
-    print('Nama Lengkap: ${namaController.text}');
-    print('NIK: ${nikController.text}');
-    print('Email: ${emailController.text}');
-    print('No Telepon: ${teleponController.text}');
-    print('Password: ${passwordController.text}');
+      if (user != null) {
+        await user.sendEmailVerification();
 
-    //
-    Navigator.pop(context);
+        try {
+          // Simpan data tambahan pengguna ke Firestore
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .set({
+            'nama': namaController.text.trim(),
+            'nik': nikController.text.trim(),
+            'telepon': teleponController.text.trim(),
+            'email': user.email,
+            'createdAt': FieldValue.serverTimestamp(), // Tambahkan timestamp
+          });
+
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                  'Registrasi berhasil! Silakan cek email Anda untuk verifikasi.'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          Navigator.pop(context); // Kembali ke halaman login atau sebelumnya
+        } catch (e) {
+          // Gagal menyimpan ke Firestore, tapi user sudah dibuat & email verifikasi terkirim
+          if (!mounted) return;
+          setState(() {
+            errorMessage =
+                'Registrasi akun berhasil & email verifikasi terkirim, namun gagal menyimpan detail profil. Silakan coba login dan lengkapi profil Anda nanti. Error: ${e.toString()}';
+          });
+          // Pertimbangkan untuk log error 'e' di sini untuk debugging
+          print('Firestore error: $e');
+        }
+      }
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      String message;
+      switch (e.code) {
+        case 'weak-password':
+          message = 'Password yang diberikan terlalu lemah.';
+          break;
+        case 'email-already-in-use':
+          message = 'Akun sudah ada untuk email tersebut.';
+          break;
+        case 'invalid-email':
+          message = 'Format email tidak valid.';
+          break;
+        default:
+          message = 'Terjadi kesalahan registrasi: ${e.message}';
+      }
+      setState(() {
+        errorMessage = message;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        errorMessage =
+            'Terjadi kesalahan yang tidak diketahui: ${e.toString()}';
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -91,7 +158,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 20),
                 Image.asset('assets/logo.png', height: 120),
                 const SizedBox(height: 30),
-
                 TextField(
                   controller: namaController,
                   decoration: InputDecoration(
@@ -104,7 +170,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     fillColor: Colors.white,
                   ),
                 ),
-
                 const SizedBox(height: 16),
                 TextField(
                   controller: nikController,
@@ -119,7 +184,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   keyboardType: TextInputType.number,
                 ),
-
                 const SizedBox(height: 16),
                 TextField(
                   controller: emailController,
@@ -134,7 +198,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   keyboardType: TextInputType.emailAddress,
                 ),
-
                 const SizedBox(height: 16),
                 TextField(
                   controller: teleponController,
@@ -149,7 +212,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   keyboardType: TextInputType.phone,
                 ),
-
                 const SizedBox(height: 16),
                 TextField(
                   controller: passwordController,
@@ -164,9 +226,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     fillColor: Colors.white,
                   ),
                 ),
-
                 const SizedBox(height: 24),
-
                 if (errorMessage != null) ...[
                   Text(
                     errorMessage!,
@@ -174,9 +234,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                   const SizedBox(height: 12),
                 ],
-
                 ElevatedButton(
-                  onPressed: daftar,
+                  onPressed: _isLoading ? null : daftar,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF018175),
                     padding: const EdgeInsets.symmetric(
@@ -187,9 +246,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       borderRadius: BorderRadius.circular(8.0),
                     ),
                   ),
-                  child: const Text('Daftar', style: TextStyle(fontSize: 16)),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 3,
+                          ),
+                        )
+                      : const Text('Daftar', style: TextStyle(fontSize: 16)),
                 ),
-
                 const SizedBox(height: 20),
                 TextButton(
                   onPressed: () {
