@@ -24,6 +24,9 @@ dependencies:
   
   # Diperlukan untuk memilih gambar dari galeri (untuk foto profil).
   image_picker: ^1.1.2 
+  firebase_auth: ^5.6.0
+  cloud_firestore: ^5.6.9
+  firebase_core: ^3.14.0
 
 dev_dependencies:
   flutter_test:

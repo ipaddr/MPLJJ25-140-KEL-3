@@ -74,9 +74,9 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
         backgroundColor: colorScheme.tertiary,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.menu),
+ icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            Scaffold.of(context).openDrawer();
+ Navigator.pop(context);
           },
         ),
       ),
