@@ -98,16 +98,6 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: const Color(0xFF018175),
         centerTitle: true,
         elevation: 0,
-        leading: TextButton.icon(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          label: const Text('Kembali', style: TextStyle(color: Colors.white)),
-          style: TextButton.styleFrom(
-            padding: const EdgeInsets.only(left: 12),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-        ),
         title: const Text('Login', style: TextStyle(color: Colors.white)),
       ),
       body: SafeArea(

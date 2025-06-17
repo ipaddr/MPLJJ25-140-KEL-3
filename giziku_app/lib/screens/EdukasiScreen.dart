@@ -1,22 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Import FirebaseAuth
 import 'package:giziku_app/screens/artikel_lengkap_screen.dart';
 
-class EdukasiScreen extends StatelessWidget {
- EdukasiScreen({super.key});
+class EdukasiScreen extends StatefulWidget {
+  const EdukasiScreen({super.key});
 
-  // Contoh data video edukasi dan artikel
-  final List<String> videoList = [
+  @override
+  State<EdukasiScreen> createState() => _EdukasiScreenState();
+}
+
+class _EdukasiScreenState extends State<EdukasiScreen> {
+  // Contoh data video edukasi
+  final List<String> _videoList = [
     'Video Edukasi 1',
     'Video Edukasi 2',
     'Video Edukasi 3',
     'Video Edukasi 4',
   ];
 
-  final List<Map<String, String>> artikelList = const [
+  // Contoh data artikel
+  final List<Map<String, String>> _artikelList = const [
     {'title': 'Artikel 1', 'content': 'Konten lengkap Artikel 1'},
-    {'title': 'Artikel 2', 'content': 'Konten lengkap Artikel 2'},
+    {'title': 'Artikel 2', 'content': 'Konten lengkap Artikel 2'}, // Perbaiki typo
     {'title': 'Artikel 3', 'content': 'Konten lengkap Artikel 3'},
   ];
+
+  String _namaPengguna = "Pengguna"; // State untuk nama pengguna
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDataPengguna(); // Panggil method untuk memuat nama pengguna
+  }
+
+  // Method untuk memuat nama pengguna
+  Future<void> _loadDataPengguna() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      if (mounted) {
+        setState(() {
+          _namaPengguna = user.displayName ?? user.email ?? "Pengguna";
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,10 +54,13 @@ class EdukasiScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF018175),
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-
+        leading: Builder( // Menggunakan Builder untuk mengakses Scaffold.of(context)
+          builder: (BuildContext context) {
+            return IconButton(
+              icon: const Icon(Icons.menu, color: Colors.white),
+              onPressed: () => Scaffold.of(context).openDrawer(),
+            );
+          },
         ),
         title: const Text(
           'Edukasi',
@@ -42,13 +72,34 @@ class EdukasiScreen extends StatelessWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Color(0xFF016BB8)),
-              child: Text(
-                'Menu',
-                style: TextStyle(color: Colors.white, fontSize: 24),
+            DrawerHeader(
+              decoration: const BoxDecoration(color: Color(0xFF016BB8)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  const Text(
+                    'Giziku App',
+                    style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    'Halo, $_namaPengguna',
+                    style: const TextStyle(color: Colors.white70, fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                ],
               ),
             ),
+            // --- MENU PROFIL DITAMBAHKAN DI SINI ---
+            ListTile(
+              leading: const Icon(Icons.person_outline),
+              title: const Text('Profil'),
+              onTap: () {
+                Navigator.pop(context); // Tutup drawer terlebih dahulu
+                Navigator.pushNamed(context, '/profile');
+              },
+            ),
+            const Divider(), // Menambah garis pemisah
             ListTile(
               leading: const Icon(Icons.monitor_heart),
               title: const Text('Pemantauan Gizi'),
@@ -70,7 +121,7 @@ class EdukasiScreen extends StatelessWidget {
               title: const Text('Edukasi'),
               onTap: () {
                 Navigator.pop(context);
-                // sudah di halaman edukasi, tidak perlu navigasi ulang
+                Navigator.pushNamed(context, '/edukasi');
               },
             ),
             ListTile(
@@ -101,7 +152,7 @@ class EdukasiScreen extends StatelessWidget {
               flex: 3,
               child: GridView.builder(
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: videoList.length,
+                itemCount: _videoList.length, // Akses _videoList dari state
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2, // 2 kolom
                   mainAxisSpacing: 12,
@@ -148,8 +199,9 @@ class EdukasiScreen extends StatelessWidget {
                     // Navigasi ke halaman artikel lengkap dengan membawa data artikelList
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => ArtikelLengkapScreen(artikelList: artikelList)),
-                    );                  },
+                      MaterialPageRoute(builder: (context) => ArtikelLengkapScreen(artikelList: _artikelList)), // Akses _artikelList dari state
+                    );
+                  },
                   child: const Text(
                     'Lihat Semua',
                     style: TextStyle(color: Color(0xFF018175)),
@@ -162,12 +214,11 @@ class EdukasiScreen extends StatelessWidget {
             Expanded(
               flex: 2,
               child: ListView.separated(
-                itemCount: artikelList.length,
+                itemCount: _artikelList.length, // Akses _artikelList dari state
                 separatorBuilder: (_, __) => const Divider(),
                 itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(
- artikelList[index]['title']!,
+                  return ListTile( // Tambahkan onTap untuk membuka detail artikel
+                    title: Text(_artikelList[index]['title']!,
                       style: const TextStyle(color: Colors.black87),
                     ),
                     trailing: const Icon(
@@ -176,7 +227,13 @@ class EdukasiScreen extends StatelessWidget {
                       color: Color(0xFF018175),
                     ),
                     onTap: () {
-                      // aksi membuka detail artikel
+                      // Aksi membuka detail artikel
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ArtikelLengkapScreen(artikelList: [_artikelList[index]]), // Kirim hanya artikel yang dipilih
+                        ),
+                      );
                     },
                   );
                 },
@@ -230,10 +287,6 @@ class EdukasiScreen extends StatelessWidget {
                       );
                     },
                   ),
-                ),
-                const Text(
-                  'Home',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF018175)),
                 ),
               ],
             ),

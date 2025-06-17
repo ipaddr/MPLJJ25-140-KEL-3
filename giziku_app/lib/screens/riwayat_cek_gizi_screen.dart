@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class RiwayatCekGiziScreen extends StatelessWidget {
+  final String _namaPengguna = "Pengguna"; // Tambahkan state untuk nama pengguna
   const RiwayatCekGiziScreen({super.key});
 
   @override
@@ -48,7 +50,7 @@ class RiwayatCekGiziScreen extends StatelessWidget {
           builder:
               (context) => IconButton(
                 icon: const Icon(Icons.menu, color: Colors.white),
-                onPressed: () => Scaffold.of(context).openDrawer(),
+            onPressed: () => Scaffold.of(context).openDrawer(),
               ),
         ),
         title: const Text(
@@ -61,13 +63,34 @@ class RiwayatCekGiziScreen extends StatelessWidget {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Color(0xFF016BB8)),
-              child: Text(
-                'Menu',
-                style: TextStyle(color: Colors.white, fontSize: 24),
+            DrawerHeader(
+              decoration: const BoxDecoration(color: Color(0xFF016BB8)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  const Text(
+                    'Giziku App',
+                    style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    'Halo, $_namaPengguna',
+                    style: const TextStyle(color: Colors.white70, fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                ],
               ),
             ),
+            // --- MENU PROFIL DITAMBAHKAN DI SINI ---
+            ListTile(
+              leading: const Icon(Icons.person_outline),
+              title: const Text('Profil'),
+              onTap: () {
+                Navigator.pop(context); // Tutup drawer terlebih dahulu
+                Navigator.pushNamed(context, '/profile');
+              },
+            ),
+            const Divider(), // Menambah garis pemisah
             ListTile(
               leading: const Icon(Icons.monitor_heart),
               title: const Text('Pemantauan Gizi'),
@@ -105,7 +128,7 @@ class RiwayatCekGiziScreen extends StatelessWidget {
               title: const Text('Riwayat Cek Gizi'),
               onTap: () {
                 Navigator.pop(context);
-                // Sudah di halaman ini, tutup drawer saja
+                Navigator.pushNamed(context, '/riwayat_cek_gizi');
               },
             ),
           ],
@@ -150,7 +173,7 @@ class RiwayatCekGiziScreen extends StatelessWidget {
           },
         ),
       ),
-      bottomNavigationBar: BottomAppBar(
+  bottomNavigationBar: BottomAppBar(
         color: Colors.white,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -188,17 +211,16 @@ class RiwayatCekGiziScreen extends StatelessWidget {
                     iconSize: 30,
                     color: Colors.white,
                     onPressed: () {
-                      Navigator.pushNamedAndRemoveUntil(
+                // Navigasi ke home, tapi jika sudah di home, jangan lakukan apa-apa
+                if (ModalRoute.of(context)?.settings.name != '/home') {
+                  Navigator.pushNamedAndRemoveUntil(
                         context,
                         '/home',
                         (route) => false,
                       );
-                    },
+ }
+ },
                   ),
-                ),
-                const Text(
-                  'Home',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF018175)),
                 ),
               ],
             ),
@@ -211,7 +233,7 @@ class RiwayatCekGiziScreen extends StatelessWidget {
                   icon: const Icon(Icons.add_circle_outline),
                   color: const Color(0xFF018175),
                   onPressed: () {
-                    Navigator.of(context).pushNamed('/tambahmakanan');
+                Navigator.of(context).pushNamed('/tambahmakanan');
                   },
                 ),
                 const Text(

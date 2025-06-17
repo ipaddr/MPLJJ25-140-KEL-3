@@ -139,7 +139,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         leading: TextButton.icon(
           onPressed: () => Navigator.pop(context),
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          label: const Text('Kembali', style: TextStyle(color: Colors.white)),
+          label: const Text('', style: TextStyle(color: Colors.white)),
           style: TextButton.styleFrom(
             foregroundColor: Colors.white,
             padding: const EdgeInsets.only(left: 12),
