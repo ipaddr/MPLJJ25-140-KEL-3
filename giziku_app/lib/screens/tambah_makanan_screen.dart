@@ -70,6 +70,11 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
+    // Controller yang update tiap build supaya show deskripsi sesuai selectedTipe
+    final TextEditingController deskripsiController = TextEditingController(
+      text: deskripsiMakanan[selectedTipe] ?? '',
+    );
+
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
@@ -77,9 +82,15 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
         backgroundColor: colorScheme.tertiary,
         centerTitle: true,
         leading: IconButton(
+<<<<<<< Updated upstream
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
  Navigator.pop(context);
+=======
+          icon: const Icon(Icons.menu),
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+>>>>>>> Stashed changes
           },
         ),
       ),
@@ -96,11 +107,14 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
                 image: DecorationImage(
                   image: AssetImage(gambarMakanan[selectedTipe]!),
                   fit: BoxFit.cover,
+<<<<<<< Updated upstream
                   // onError is not directly available for DecorationImage
                   // but if you switch to Image.asset, you can use errorBuilder:
                   // errorBuilder: (context, error, stackTrace) {
                   //   return const Icon(Icons.broken_image, size: 50, color: Colors.red);
                   // },
+=======
+>>>>>>> Stashed changes
                 ),
               ),
             ),
@@ -113,17 +127,31 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
                 border: UnderlineInputBorder(),
               ),
               items:
+<<<<<<< Updated upstream
                   deskripsiMakanan.entries.map((e) {
                     return DropdownMenuItem(
                       value: e.key,
                       child: Text('Tipe ${e.key}'),
                     );
                   }).toList(),
+=======
+                  deskripsiMakanan.entries
+                      .map(
+                        (e) => DropdownMenuItem(
+                          value: e.key,
+                          child: Text('Tipe ${e.key}'),
+                        ),
+                      )
+                      .toList(),
+>>>>>>> Stashed changes
               onChanged: (val) {
                 if (val != null) {
                   setState(() {
                     selectedTipe = val;
+<<<<<<< Updated upstream
                     deskripsiController.text = deskripsiMakanan[selectedTipe] ?? ''; // Update here
+=======
+>>>>>>> Stashed changes
                   });
                 }
               },
@@ -133,6 +161,7 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
             TextFormField(
               readOnly: true,
               controller: deskripsiController,
+<<<<<<< Updated upstream
               decoration: const InputDecoration(
                 labelText: 'Detail Paket',
                 border: UnderlineInputBorder(),
@@ -155,10 +184,22 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
             Spacer(),
 
             // Tombol Simpan yang Diperbarui
+=======
+              decoration: InputDecoration(
+                labelText: 'Detail Paket',
+                border: const UnderlineInputBorder(),
+                suffixIcon: const Icon(Icons.arrow_drop_down),
+              ),
+            ),
+
+            const Spacer(),
+
+>>>>>>> Stashed changes
             SizedBox(
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
+<<<<<<< Updated upstream
                 onPressed: _isSaving ? null : () async {
                   // Validasi
                   if (_selectedDate == null) { // Validate using _selectedDate
@@ -238,6 +279,20 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
                         child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.0),
                       )
                     : const Text('Simpan'),
+=======
+                onPressed: () {
+                  // Navigasi ke layar MakananDitambahkan dan kirim data deskripsi
+                  Navigator.pushNamed(
+                    context,
+                    '/makanan_ditambahkan',
+                    arguments: deskripsiMakanan[selectedTipe],
+                  );
+                },
+                child: const Text(
+                  'Simpan',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+>>>>>>> Stashed changes
               ),
             ),
           ],

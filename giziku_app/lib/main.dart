@@ -18,9 +18,17 @@ import 'screens/splash_screen.dart';
 import 'screens/tambah_makanan_screen.dart';
 import 'screens/makanan_ditambahkan_screen.dart';
 import 'screens/pemantauan_gizi_screen.dart';
+<<<<<<< Updated upstream
 import 'screens/riwayat_ambil_makanan_screen.dart';
 import 'screens/riwayat_cek_gizi_screen.dart';
 import 'screens/dashboard_statistik_screen.dart';
+=======
+
+// Import admin screens
+import 'screens/admin_home_screen.dart';
+import 'screens/admin_dashboard_makanan_screen.dart';
+import 'screens/admin_kelola_edukasi_screen.dart';
+>>>>>>> Stashed changes
 
 // Admin screens
 import 'screens/admin_home_screen.dart';
@@ -92,6 +100,7 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const HomeScreen(),
         '/forgetpassword': (context) => const ForgetPasswordScreen(),
         '/pemantauan_gizi': (context) => const PemantauanGiziScreen(),
+<<<<<<< Updated upstream
         '/tambahmakanan': (context) => const TambahMakananScreen(),
         '/makanan_ditambahkan': (context) => const MakananDitambahkanScreen(),
         '/riwayat_ambil_makanan': (context) =>
@@ -100,6 +109,19 @@ class MyApp extends StatelessWidget {
         '/edukasi': (context) => const EdukasiScreen(),
         '/dashboard': (context) => const StatistikBadanChart(),
         '/profile': (context) => const ProfileScreen(),
+=======
+
+        // User routes
+        '/tambahmakanan': (context) => const TambahMakananScreen(),
+        '/makanan_ditambahkan': (context) => const MakananDitambahkanScreen(),
+
+        // Admin routes
+        '/admin_home': (context) => const AdminHomeScreen(),
+        '/admin_dashboard_makanan':
+            (context) => const AdminDashboardMakananScreen(),
+        '/admin_kelola_edukasi': (context) => const AdminKelolaEdukasiScreen(),
+      },
+>>>>>>> Stashed changes
 
         // Rute untuk halaman admin
         '/admin_home': (context) => const AdminHomeScreen(),
