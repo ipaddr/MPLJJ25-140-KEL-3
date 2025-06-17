@@ -43,5 +43,5 @@ flutter:
   # --- ASET/GAMBAR YANG DIGUNAKAN ---
   # Pastikan Anda memiliki folder 'assets' di root proyek Anda.
   assets:
-    - assets/logo.png
-    - assets/makanan1.png # Disesuaikan menjadi .jpg seperti pada HomeScreen
+    - assets/images/logo.png
+    - assets/images/makanan1.png

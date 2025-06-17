@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:giziku_app/screens/profil_screen.dart';
 import 'package:intl/date_symbol_data_local.dart';
+<<<<<<< HEAD
 
 // User screens
+=======
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+//User screens
+import 'firebase_options.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';

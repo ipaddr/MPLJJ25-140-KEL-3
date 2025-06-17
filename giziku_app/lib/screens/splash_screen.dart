@@ -26,7 +26,7 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: const Color(0xFF10b68d), // warna background splash screen
       body: Center(
         child: Image.asset(
-          'assets/Logo.png', // 
+          'assets/images/Logo.png', // 
           height: 150,
           fit: BoxFit.contain,
         ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class TambahMakananScreen extends StatefulWidget {
   const TambahMakananScreen({super.key});
@@ -28,6 +30,8 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
   int selectedTipe = 1;
   late TextEditingController deskripsiController;
   final TextEditingController tanggalController = TextEditingController();
+  DateTime? _selectedDate; // To store the selected DateTime object
+  bool _isSaving = false; // To manage loading state for the save button
 
   @override
   void initState() {
@@ -53,6 +57,7 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
     );
     if (picked != null) {
       setState(() {
+        _selectedDate = picked; // Store the picked DateTime
         tanggalController.text = DateFormat(
           'dd MMMM yyyy',
           'id_ID',
@@ -65,8 +70,6 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    deskripsiController.text = deskripsiMakanan[selectedTipe] ?? '';
-
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
@@ -74,7 +77,7 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
         backgroundColor: colorScheme.tertiary,
         centerTitle: true,
         leading: IconButton(
- icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () {
  Navigator.pop(context);
           },
@@ -93,6 +96,11 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
                 image: DecorationImage(
                   image: AssetImage(gambarMakanan[selectedTipe]!),
                   fit: BoxFit.cover,
+                  // onError is not directly available for DecorationImage
+                  // but if you switch to Image.asset, you can use errorBuilder:
+                  // errorBuilder: (context, error, stackTrace) {
+                  //   return const Icon(Icons.broken_image, size: 50, color: Colors.red);
+                  // },
                 ),
               ),
             ),
@@ -115,6 +123,7 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
                 if (val != null) {
                   setState(() {
                     selectedTipe = val;
+                    deskripsiController.text = deskripsiMakanan[selectedTipe] ?? ''; // Update here
                   });
                 }
               },
@@ -143,26 +152,92 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
               ),
             ),
 
-            const Spacer(),
+            Spacer(),
 
+            // Tombol Simpan yang Diperbarui
             SizedBox(
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/makanan_ditambahkan',
-                    arguments: {
+                onPressed: _isSaving ? null : () async {
+                  // Validasi
+                  if (_selectedDate == null) { // Validate using _selectedDate
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar( // Check mounted before ScaffoldMessenger
+                      const SnackBar(content: Text('Tanggal harus diisi')),
+                    );
+                    return;
+                  }
+
+                  final user = FirebaseAuth.instance.currentUser;
+                  if (user == null) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Anda harus login untuk menyimpan data')),
+                    );
+                    return;
+                  }
+
+                  if (mounted) {
+                    setState(() {
+                      _isSaving = true;
+                    });
+                  }
+
+                  // Simpan ke Firestore
+                  try {
+                    await FirebaseFirestore.instance
+                        .collection('riwayatAmbilMakanan')
+                        .add({
+                      'userId': user.uid,
+                      'tipeMakanan': selectedTipe, // Store the key (integer)
                       'deskripsi': deskripsiMakanan[selectedTipe],
-                      'tanggal': tanggalController.text,
-                    },
-                  );
+                      'tanggal': _selectedDate, // Store the DateTime object directly
+                      'timestamp': FieldValue.serverTimestamp(), // Tambahkan timestamp
+                    });
+
+                    if (!mounted) return;
+                    // Optionally clear fields after successful save
+                    // tanggalController.clear();
+                    // _selectedDate = null;
+                    // setState(() { selectedTipe = 1; deskripsiController.text = deskripsiMakanan[1] ?? ''; });
+
+                    // Navigasi ke halaman sukses
+                    Navigator.pushNamed(
+                      context,
+                      '/makanan_ditambahkan',
+                      arguments: {
+                        'deskripsi': deskripsiMakanan[selectedTipe],
+                        'tanggal': tanggalController.text,
+                      },
+                    );
+                  } catch (e) {
+                    print('Error saving to Firestore: $e');
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(
+                              'Gagal menyimpan data: ${e.toString()}')), // Pesan error yang lebih spesifik
+                    );
+                  } finally {
+                    if (mounted) {
+                      setState(() {
+                        _isSaving = false;
+                      });
+                    }
+                  }
                 },
-                child: const Text(
-                  'Simpan',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                style: ElevatedButton.styleFrom(
+                  textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                 ),
+                child: _isSaving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.0),
+                      )
+                    : const Text('Simpan'),
               ),
             ),
           ],

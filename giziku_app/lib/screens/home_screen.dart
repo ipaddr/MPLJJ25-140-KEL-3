@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:giziku_app/screens/pemantauan_gizi_screen.dart'; // Untuk akses _getEmoticonForStatus dan _getColorForStatus
+import 'package:giziku_app/utils/gizi_helpers.dart'; // Import helper baru
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,7 +10,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   String _namaPengguna = "Pengguna";
   Map<String, dynamic>? _dataGiziTerakhir;
   bool _isLoadingGizi = true;
@@ -18,8 +18,25 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _loadDataPengguna();
     _loadDataGiziTerakhir();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      // Muat ulang data gizi terakhir ketika aplikasi kembali aktif
+      // atau setelah kembali dari halaman lain yang mungkin mengubah data.
+      _loadDataGiziTerakhir();
+    }
   }
 
   Future<void> _loadDataPengguna() async {
@@ -34,8 +51,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadDataGiziTerakhir() async {
+    if (!mounted) return; // Pastikan widget masih ter-mount
+    setState(() {
+      _isLoadingGizi = true; // Set loading true di awal
+    });
+
     User? user = FirebaseAuth.instance.currentUser;
-    print("HomeScreen: Current user UID: ${user?.uid}"); // Log UID pengguna
+    print("HomeScreen: Current user UID: ${user?.uid}");
     if (user == null) {
       if (mounted) setState(() => _isLoadingGizi = false);
       return;
@@ -43,18 +65,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          // .collection('riwayatCekGiziSalahNama') // Baris ini untuk tes jika nama koleksi salah
           .collection('riwayatCekGizi')
-          .where('userId', isEqualTo: user.uid)
-          .orderBy('tanggalPengecekan', descending: true)
+          .where('userId', isEqualTo: user.uid) // Filter
+          .orderBy('tanggalPengecekan', descending: true) // Order
           .limit(1)
           .get();
 
-      print("HomeScreen: Query executed. Number of docs found: ${querySnapshot.docs.length}"); // Log jumlah dokumen
+      print(
+          "HomeScreen: Query executed. Number of docs found: ${querySnapshot.docs.length}");
 
       if (querySnapshot.docs.isNotEmpty) {
         final data = querySnapshot.docs.first.data() as Map<String, dynamic>;
-        print("HomeScreen: Data found: $data"); // Log data yang ditemukan
+        print("HomeScreen: Data found: $data");
         if (mounted) {
           setState(() {
             _dataGiziTerakhir = data;
@@ -63,38 +85,27 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       } else {
         print("HomeScreen: No nutritional data found for this user.");
-        if (mounted) setState(() => _isLoadingGizi = false);
+        if (mounted) {
+          setState(() {
+            _dataGiziTerakhir =
+                null; // Pastikan data lama dihapus jika tidak ada data baru
+            _isLoadingGizi = false;
+          });
+        }
       }
     } catch (e) {
-          print("HomeScreen: Error loading last nutritional data: $e");
-      if (mounted) setState(() => _isLoadingGizi = false);
+      print(
+          "HomeScreen: Error loading last nutritional data: $e"); // Ini tempat error muncul
+      if (mounted) {
+        setState(() {
+          _dataGiziTerakhir = null;
+          _isLoadingGizi = false;
+        });
+      }
     }
   }
 
-  // Fungsi helper dari PemantauanGiziScreen (bisa dipindahkan ke file utilitas jika sering digunakan)
-  IconData _getEmoticonForStatus(String? status) {
-    switch (status) {
-      case 'Kurang':
-        return Icons.sentiment_very_dissatisfied;
-      case 'Berlebih':
-        return Icons.sentiment_dissatisfied;
-      case 'Normal':
-      default:
-        return Icons.sentiment_very_satisfied;
-    }
-  }
-
-  Color _getColorForStatus(String? status, BuildContext context) {
-    switch (status) {
-      case 'Kurang':
-        return const Color.fromARGB(255, 235, 220, 52); // Kuning
-      case 'Berlebih':
-        return const Color.fromARGB(255, 255, 82, 82); // Merah
-      case 'Normal':
-      default:
-        return const Color.fromARGB(255, 76, 175, 80); // Hijau
-    }
-  }
+  // Fungsi helper _getEmoticonForStatus dan _getColorForStatus sudah dipindahkan ke gizi_helpers.dart
 
   @override
   Widget build(BuildContext context) {
@@ -105,9 +116,9 @@ class _HomeScreenState extends State<HomeScreen> {
         elevation: 0,
         leading: Builder(
           builder: (context) => IconButton(
-                icon: const Icon(Icons.menu, color: Colors.white),
-                onPressed: () => Scaffold.of(context).openDrawer(),
-              ),
+            icon: const Icon(Icons.menu, color: Colors.white),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
         ),
         title: const Text(
           'Beranda',
@@ -127,7 +138,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   const Text(
                     'Giziku App',
-                    style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold),
                   ),
                   Text(
                     'Halo, $_namaPengguna',
@@ -137,22 +151,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            // --- MENU PROFIL DITAMBAHKAN DI SINI ---
             ListTile(
               leading: const Icon(Icons.person_outline),
               title: const Text('Profil'),
               onTap: () {
-                Navigator.pop(context); // Tutup drawer terlebih dahulu
+                Navigator.pop(context);
                 Navigator.pushNamed(context, '/profile');
               },
             ),
-            const Divider(), // Menambah garis pemisah
+            const Divider(),
             ListTile(
               leading: const Icon(Icons.monitor_heart),
               title: const Text('Pemantauan Gizi'),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, '/pemantauan_gizi');
+                Navigator.pushNamed(context, '/pemantauan_gizi').then((_) {
+                  // Setelah kembali dari halaman pemantauan gizi, muat ulang data
+                  _loadDataGiziTerakhir();
+                });
               },
             ),
             ListTile(
@@ -212,8 +228,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             const SizedBox(height: 24),
-
-            // Box IMT
             Card(
               elevation: 4,
               shape: RoundedRectangleBorder(
@@ -232,11 +246,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      _dataGiziTerakhir!['statusGizi'] ?? 'Belum Ada Data',
+                                      _dataGiziTerakhir!['statusGizi'] ??
+                                          'Belum Ada Data',
                                       style: TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
-                                        color: _getColorForStatus(_dataGiziTerakhir!['statusGizi'], context),
+                                        color: getColorForStatus(
+                                            _dataGiziTerakhir!['statusGizi'],
+                                            context),
                                       ),
                                     ),
                                     const SizedBox(height: 4),
@@ -258,23 +275,25 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                               Icon(
-                                _getEmoticonForStatus(_dataGiziTerakhir!['statusGizi']),
+                                getEmoticonForStatus(
+                                    _dataGiziTerakhir!['statusGizi']),
                                 size: 56,
-                                color: _getColorForStatus(_dataGiziTerakhir!['statusGizi'], context),
+                                color: getColorForStatus(
+                                    _dataGiziTerakhir!['statusGizi'], context),
                               ),
                             ],
                           )
-                        : const Text(
-                            'Belum ada data pemantauan gizi. Yuk, cek sekarang!',
-                            style: TextStyle(fontSize: 16, color: Color(0xFF018175)),
-                            textAlign: TextAlign.center,
+                        : const Center(
+                            child: Text(
+                              'Belum ada data pemantauan gizi. Yuk, cek sekarang!',
+                              style: TextStyle(
+                                  fontSize: 16, color: Color(0xFF018175)),
+                              textAlign: TextAlign.center,
+                            ),
                           ),
               ),
             ),
-
             const SizedBox(height: 24),
-
-            // Tombol Aksi Cepat
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -282,20 +301,22 @@ class _HomeScreenState extends State<HomeScreen> {
                   context,
                   icon: Icons.monitor_heart_outlined,
                   label: 'Cek Gizi',
-                  onTap: () => Navigator.pushNamed(context, '/pemantauan_gizi'),
+                  onTap: () {
+                    Navigator.pushNamed(context, '/pemantauan_gizi').then((_) {
+                      _loadDataGiziTerakhir();
+                    });
+                  },
                 ),
                 _buildQuickActionButton(
                   context,
                   icon: Icons.history_edu_outlined,
                   label: 'Riwayat Gizi',
-                  onTap: () => Navigator.pushNamed(context, '/riwayat_cek_gizi'),
+                  onTap: () =>
+                      Navigator.pushNamed(context, '/riwayat_cek_gizi'),
                 ),
               ],
             ),
-
             const SizedBox(height: 24),
-
-            // Rekomendasi Makanan
             const Text(
               'Rekomendasi Makanan Hari Ini',
               style: TextStyle(
@@ -317,12 +338,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     ClipRRect(
                       borderRadius: BorderRadius.circular(12),
                       child: Image.asset(
-                        'assets/makanan1.jpg',
+                        'assets/images/makanan1.jpg', // Pastikan path asset benar
                         width: 70,
                         height: 70,
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.fastfood, size: 64, color: Colors.grey),
+                            const Icon(Icons.fastfood,
+                                size: 64, color: Colors.grey),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -336,10 +358,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 24),
-
-            // Edukasi
             const Text(
               'Edukasi Gizi',
               style: TextStyle(
@@ -369,7 +388,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       Expanded(
                         child: Text(
                           'Pentingnya Makanan Bergizi untuk Anak',
-                          style: TextStyle(fontSize: 15, color: Colors.black87, fontWeight: FontWeight.w500),
+                          style: TextStyle(
+                              fontSize: 15,
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w500),
                         ),
                       ),
                     ],
@@ -377,6 +399,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
+            const SizedBox(height: 24), // Tambahan spasi di akhir
           ],
         ),
       ),
@@ -387,7 +410,6 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            // Tombol Back
             Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
@@ -395,7 +417,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   icon: const Icon(Icons.arrow_back_ios_new_rounded),
                   color: const Color(0xFF018175),
                   onPressed: () {
-                    // Cek jika bisa kembali, maka kembali. Jika tidak, jangan lakukan apa-apa.
                     if (Navigator.canPop(context)) {
                       Navigator.pop(context);
                     }
@@ -407,16 +428,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-
-            // Tombol Home
             Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
                 Container(
                   padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFF018175),
+                    color: Color(0xFF018175),
                   ),
                   child: IconButton(
                     icon: const Icon(Icons.home),
@@ -429,8 +448,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-
-            // Tombol Tambah Makanan
             Column(
               mainAxisSize: MainAxisSize.min,
               children: <Widget>[
@@ -474,10 +491,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     offset: const Offset(0, 2))
               ],
             ),
-            child: Icon(icon, size: 30, color: Theme.of(context).colorScheme.tertiary),
+            child: Icon(icon,
+                size: 30, color: Theme.of(context).colorScheme.tertiary),
           ),
           const SizedBox(height: 8),
-          Text(label, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+          Text(label,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500)),
         ],
       ),
     );

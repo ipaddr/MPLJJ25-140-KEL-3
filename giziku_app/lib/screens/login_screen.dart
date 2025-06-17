@@ -113,7 +113,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Column(
                         children: [
                           const SizedBox(height: 20),
-                          Image.asset('assets/Logo.png', height: 120),
+                          Image.asset('assets/images/Logo.png', height: 120),
                           const SizedBox(height: 30),
                           TextFormField(
                             controller: _usernameController,

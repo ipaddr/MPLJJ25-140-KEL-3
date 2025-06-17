@@ -1,58 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:giziku_app/utils/gizi_helpers.dart'; // Import helper untuk warna
+import 'package:intl/intl.dart'; // Import untuk formatting tanggal
 
-class RiwayatCekGiziScreen extends StatelessWidget {
-  final String _namaPengguna = "Pengguna"; // Tambahkan state untuk nama pengguna
+class RiwayatCekGiziScreen extends StatefulWidget {
   const RiwayatCekGiziScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final List<Map<String, String>> riwayatGizi = [
-      {
-        'tanggal': '22/03/2025',
-        'berat': '45 kg',
-        'tinggi': '150 cm',
-        'hasil': 'Normal',
-      },
-      {
-        'tanggal': '20/04/2025',
-        'berat': '50 kg',
-        'tinggi': '148 cm',
-        'hasil': 'Berlebih',
-      },
-      {
-        'tanggal': '15/05/2025',
-        'berat': '40 kg',
-        'tinggi': '155 cm',
-        'hasil': 'Kurang',
-      },
-    ];
+  State<RiwayatCekGiziScreen> createState() => _RiwayatCekGiziScreenState();
+}
 
-    Color getColor(String status) {
-      switch (status) {
-        case 'Normal':
-          return Colors.green;
-        case 'Berlebih':
-          return Colors.orange;
-        case 'Kurang':
-          return Colors.red;
-        default:
-          return Colors.grey;
+class _RiwayatCekGiziScreenState extends State<RiwayatCekGiziScreen> {
+  String _namaPengguna = "Pengguna";
+  User? _currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentUser = FirebaseAuth.instance.currentUser;
+    _loadDataPengguna();
+  }
+
+  Future<void> _loadDataPengguna() async {
+    if (_currentUser != null) {
+      if (mounted) {
+        setState(() {
+          _namaPengguna = _currentUser!.displayName ?? _currentUser!.email ?? "Pengguna";
+        });
       }
     }
+  }
 
+  Stream<QuerySnapshot>? _getRiwayatStream() {
+    if (_currentUser == null) {
+      return null;
+    }
+    return FirebaseFirestore.instance
+        .collection('riwayatCekGizi')
+        .where('userId', isEqualTo: _currentUser!.uid) // Filter
+        .orderBy('tanggalPengecekan', descending: true) // Order
+        .snapshots();
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF10b68d),
       appBar: AppBar(
         backgroundColor: const Color(0xFF018175),
         elevation: 0,
-        leading: Builder(
-          builder:
-              (context) => IconButton(
-                icon: const Icon(Icons.menu, color: Colors.white),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-              ),
-        ),
+        // Leading button (menu atau back) akan otomatis ditangani oleh Flutter
+        // berdasarkan keberadaan Drawer atau kemampuan untuk pop.
         title: const Text(
           'Riwayat Cek Gizi',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
@@ -81,16 +81,15 @@ class RiwayatCekGiziScreen extends StatelessWidget {
                 ],
               ),
             ),
-            // --- MENU PROFIL DITAMBAHKAN DI SINI ---
             ListTile(
               leading: const Icon(Icons.person_outline),
               title: const Text('Profil'),
               onTap: () {
-                Navigator.pop(context); // Tutup drawer terlebih dahulu
+                Navigator.pop(context);
                 Navigator.pushNamed(context, '/profile');
               },
             ),
-            const Divider(), // Menambah garis pemisah
+            const Divider(),
             ListTile(
               leading: const Icon(Icons.monitor_heart),
               title: const Text('Pemantauan Gizi'),
@@ -126,9 +125,10 @@ class RiwayatCekGiziScreen extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.history),
               title: const Text('Riwayat Cek Gizi'),
+              tileColor: Theme.of(context).colorScheme.primary.withOpacity(0.1), // Menandai halaman aktif
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, '/riwayat_cek_gizi');
+                // Sudah di halaman ini, tidak perlu navigasi
               },
             ),
           ],
@@ -136,115 +136,159 @@ class RiwayatCekGiziScreen extends StatelessWidget {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: ListView.separated(
-          itemCount: riwayatGizi.length,
-          separatorBuilder: (context, index) => const SizedBox(height: 12),
-          itemBuilder: (context, index) {
-            final data = riwayatGizi[index];
-            return Container(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.85),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    data['tanggal']!,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
+        child: StreamBuilder<QuerySnapshot>(
+          stream: _getRiwayatStream(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.white)));
+            }
+            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+              return const Center(
+                  child: Text('Belum ada riwayat cek gizi.',
+                      style: TextStyle(color: Colors.white70, fontSize: 16)));
+            }
+
+            final riwayatDocs = snapshot.data!.docs;
+
+            return ListView.separated(
+              itemCount: riwayatDocs.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final data = riwayatDocs[index].data() as Map<String, dynamic>;
+                final Timestamp timestamp = data['tanggalPengecekan'] as Timestamp? ?? Timestamp.now();
+                final DateTime tanggal = timestamp.toDate();
+                final String tanggalFormatted = DateFormat('dd MMMM yyyy, HH:mm', 'id_ID').format(tanggal);
+
+                return Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(12),
+                     boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 6),
-                  Text('Berat Badan: ${data['berat']}'),
-                  Text('Tinggi Badan: ${data['tinggi']}'),
-                  Text(
-                    'Hasil: ${data['hasil']}',
-                    style: TextStyle(
-                      color: getColor(data['hasil']!),
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        tanggalFormatted,
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text('Nama Anak: ${data['nama'] ?? '-'}', style: const TextStyle(fontSize: 14)),
+                      Text('Usia: ${data['usia']?.toString() ?? '-'} tahun', style: const TextStyle(fontSize: 14)),
+                      Text('Berat Badan: ${data['beratBadan']?.toStringAsFixed(1) ?? '-'} kg', style: const TextStyle(fontSize: 14)),
+                      Text('Tinggi Badan: ${data['tinggiBadan']?.toStringAsFixed(0) ?? '-'} cm', style: const TextStyle(fontSize: 14)),
+                      Text('IMT: ${data['imt']?.toStringAsFixed(1) ?? '-'}', style: const TextStyle(fontSize: 14)),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Status Gizi: ${data['statusGizi'] ?? '-'}',
+                        style: TextStyle(
+                          color: getColorForStatus(data['statusGizi'], context),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14.5,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             );
           },
         ),
       ),
-  bottomNavigationBar: BottomAppBar(
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 6.0,
         color: Colors.white,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            // Tombol Back
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                  color: const Color(0xFF018175),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                const Text(
-                  'Back',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF018175)),
-                ),
-              ],
+            _buildBottomNavItem(
+              icon: Icons.arrow_back_ios_new_rounded,
+              label: 'Back',
+              onPressed: () {
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                }
+              },
             ),
-
-            // Tombol Home
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFF018175),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.home),
-                    iconSize: 30,
-                    color: Colors.white,
-                    onPressed: () {
-                // Navigasi ke home, tapi jika sudah di home, jangan lakukan apa-apa
+            _buildBottomNavItem(
+              icon: Icons.home,
+              label: 'Home',
+              isCentral: true,
+              onPressed: () {
                 if (ModalRoute.of(context)?.settings.name != '/home') {
                   Navigator.pushNamedAndRemoveUntil(
-                        context,
-                        '/home',
-                        (route) => false,
-                      );
- }
- },
-                  ),
-                ),
-              ],
+                    context,
+                    '/home',
+                    (route) => false,
+                  );
+                }
+              },
             ),
-
-            // Tombol Tambah Makanan
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.add_circle_outline),
-                  color: const Color(0xFF018175),
-                  onPressed: () {
+            _buildBottomNavItem(
+              icon: Icons.add_circle_outline,
+              label: 'Tambah',
+              onPressed: () {
                 Navigator.of(context).pushNamed('/tambahmakanan');
-                  },
-                ),
-                const Text(
-                  'Tambah',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF018175)),
-                ),
-              ],
+              },
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildBottomNavItem({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    bool isCentral = false,
+  }) {
+    final color = isCentral ? Colors.white : const Color(0xFF018175);
+    final iconColor = isCentral ? Colors.white : const Color(0xFF018175);
+    final backgroundColor = isCentral ? const Color(0xFF018175) : Colors.transparent;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        if (isCentral)
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: backgroundColor,
+            ),
+            child: IconButton(
+              icon: Icon(icon, color: iconColor),
+              iconSize: 30,
+              onPressed: onPressed,
+            ),
+          )
+        else
+          IconButton(
+            icon: Icon(icon, color: iconColor),
+            onPressed: onPressed,
+          ),
+        if (!isCentral)
+          Text(
+            label,
+            style: TextStyle(fontSize: 12, color: color),
+          ),
+      ],
     );
   }
 }
