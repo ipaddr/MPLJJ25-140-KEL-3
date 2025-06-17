@@ -8,7 +8,7 @@ class PemantauanGiziScreen extends StatefulWidget {
 }
 
 class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
-  final TextEditingController namaController = TextEditingController();
+  // Controller untuk nama sudah dihapus
   final TextEditingController usiaController = TextEditingController();
   final TextEditingController beratController = TextEditingController();
   final TextEditingController tinggiController = TextEditingController();
@@ -16,21 +16,38 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
   String statusGizi = 'Normal'; // Default
   String rekomendasi = 'Makanan 4 Sehat 5 Sempurna';
 
+  // Menambahkan dispose untuk membersihkan controller saat widget tidak lagi digunakan
+  @override
+  void dispose() {
+    usiaController.dispose();
+    beratController.dispose();
+    tinggiController.dispose();
+    super.dispose();
+  }
+
   void hitungStatusGizi() {
+    // Memastikan form tidak kosong sebelum melakukan perhitungan
+    if (beratController.text.isEmpty || tinggiController.text.isEmpty) {
+      // Anda bisa menampilkan snackbar atau pesan error di sini jika diperlukan
+      return;
+    }
     double berat = double.tryParse(beratController.text) ?? 0;
     double tinggi = double.tryParse(tinggiController.text) ?? 1;
+
+    // Menghindari pembagian dengan nol jika tinggi tidak valid
+    if (tinggi == 0) return;
 
     double imt = berat / ((tinggi / 100) * (tinggi / 100));
     setState(() {
       if (imt < 18.5) {
         statusGizi = 'Kurang';
         rekomendasi = 'Konsumsi makanan tinggi kalori dan protein';
-      } else if (imt > 25) {
+      } else if (imt >= 18.5 && imt <= 24.9) {
+        statusGizi = 'Normal';
+        rekomendasi = 'Pertahankan pola makan 4 Sehat 5 Sempurna';
+      } else {
         statusGizi = 'Berlebih';
         rekomendasi = 'Kurangi makanan berlemak dan perbanyak sayur';
-      } else {
-        statusGizi = 'Normal';
-        rekomendasi = 'Makanan 4 Sehat 5 Sempurna';
       }
     });
   }
@@ -39,71 +56,84 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Pemantauan Gizi')),
-      body: Padding(
+      // Menggunakan SingleChildScrollView agar tidak overflow saat keyboard muncul
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            TextField(
-              controller: namaController,
-              decoration: const InputDecoration(labelText: 'Nama'),
-            ),
+            // TextField untuk nama sudah dihapus dari sini
             TextField(
               controller: usiaController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(labelText: 'Usia (Tahun)'),
             ),
+            const SizedBox(height: 12),
             TextField(
               controller: beratController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(labelText: 'Berat Badan (Kg)'),
             ),
+            const SizedBox(height: 12),
             TextField(
               controller: tinggiController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(labelText: 'Tinggi Badan (Cm)'),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 20),
             ElevatedButton(
               onPressed: hitungStatusGizi,
-              child: const Text('Hitung'),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(
+                    double.infinity, 50), // Membuat tombol lebih lebar
+              ),
+              child: const Text('Hitung Status Gizi'),
             ),
             const SizedBox(height: 20),
             const Text(
-              'Status Gizi',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              'Status Gizi Anda',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            Icon(
-              Icons.pie_chart,
-              size: 80,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: const [
-                DotWithText(text: 'Kurang', color: Colors.black),
-                DotWithText(text: 'Normal', color: Colors.black),
-                DotWithText(text: 'Berlebih', color: Colors.black),
-              ],
+            // Widget untuk menampilkan hasil status gizi
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                statusGizi,
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
             ),
             const SizedBox(height: 20),
             const Text(
               'Rekomendasi Makanan',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.3),
-                borderRadius: BorderRadius.circular(12),
+                  color: Colors.white.withOpacity(0.8),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: Theme.of(context).colorScheme.tertiary)),
+              child: Text(
+                rekomendasi,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16),
               ),
-              child: Text(rekomendasi, textAlign: TextAlign.center),
             ),
           ],
         ),
       ),
+      // Bottom Navigation Bar tetap sama
       bottomNavigationBar: BottomAppBar(
         color: Colors.white,
         child: Row(
@@ -133,9 +163,9 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
               children: [
                 Container(
                   padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFF018175),
+                    color: Color(0xFF018175),
                   ),
                   child: IconButton(
                     icon: const Icon(Icons.home),
@@ -181,20 +211,5 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
   }
 }
 
-class DotWithText extends StatelessWidget {
-  final String text;
-  final Color color;
-
-  const DotWithText({super.key, required this.text, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(Icons.circle, color: color, size: 10),
-        const SizedBox(width: 4),
-        Text(text),
-      ],
-    );
-  }
-}
+// Widget ini tidak perlu diubah, jadi saya hapus dari sini agar fokus pada perubahan.
+// Pastikan Anda tetap memiliki class DotWithText di file Anda jika masih digunakan.

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:giziku_app/screens/profil_screen.dart';
 import 'package:intl/date_symbol_data_local.dart';
-//User screens
+
+// User screens
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';
@@ -20,12 +21,16 @@ import 'screens/admin_home_screen.dart';
 import 'screens/admin_dashboard_makanan_screen.dart';
 import 'screens/admin_kelola_edukasi_screen.dart';
 
+// Titik masuk utama aplikasi. Flutter akan selalu mencari fungsi ini pertama kali.
 void main() async {
+  // Memastikan semua komponen Flutter siap sebelum aplikasi dijalankan.
   WidgetsFlutterBinding.ensureInitialized();
+  // Menginisialisasi dukungan format tanggal untuk Bahasa Indonesia.
   await initializeDateFormatting(
     'id_ID',
     null,
-  ); // Penting untuk tanggal Bahasa Indonesia
+  );
+  // Menjalankan widget utama aplikasi.
   runApp(const MyApp());
 }
 
@@ -36,7 +41,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Giziku App',
+      // Menyembunyikan banner "Debug" di pojok kanan atas.
       debugShowCheckedModeBanner: false,
+      // Mengatur tema visual global untuk seluruh aplikasi.
       theme: ThemeData(
         useMaterial3: true,
         scaffoldBackgroundColor: const Color(0xFF10b68d),
@@ -69,7 +76,9 @@ class MyApp extends StatelessWidget {
           style: TextButton.styleFrom(foregroundColor: Colors.white),
         ),
       ),
+      // Rute awal yang akan ditampilkan saat aplikasi pertama kali dibuka.
       initialRoute: '/splash',
+      // Daftar semua halaman (rute) yang ada di dalam aplikasi.
       routes: {
         '/splash': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
@@ -86,17 +95,19 @@ class MyApp extends StatelessWidget {
         '/dashboard': (context) => const StatistikBadanChart(),
         '/profile': (context) => const ProfileScreen(),
 
-        // Admin routes
+        // Rute untuk halaman admin
         '/admin_home': (context) => const AdminHomeScreen(),
         '/admin_dashboard_makanan': (context) =>
             const AdminDashboardMakananScreen(),
         '/admin_kelola_edukasi': (context) => const AdminKelolaEdukasiScreen(),
       },
+      // Fungsi yang akan dipanggil jika aplikasi mencoba navigasi ke rute yang tidak terdaftar.
       onUnknownRoute: (settings) {
         return MaterialPageRoute(
           builder: (context) => Scaffold(
-            appBar: AppBar(title: const Text('404')),
-            body: const Center(child: Text('Halaman tidak ditemukan')),
+            appBar: AppBar(title: const Text('404 - Halaman Tidak Ditemukan')),
+            body: const Center(
+                child: Text('Maaf, halaman yang Anda tuju tidak ada.')),
           ),
         );
       },
