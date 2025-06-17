@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:giziku_app/utils/gizi_helpers.dart'; // Import helper baru
 
 class PemantauanGiziScreen extends StatefulWidget {
   const PemantauanGiziScreen({super.key});
@@ -18,12 +19,12 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
 
   String statusGizi = 'Normal'; // Default
   String rekomendasi = 'Makanan 4 Sehat 5 Sempurna';
-  String _namaPengguna = "Pengguna"; // Tambahkan state untuk nama pengguna
+  String _namaPengguna = "Pengguna";
 
   @override
   void initState() {
     super.initState();
-    _loadDataPengguna(); // Panggil method untuk memuat nama pengguna
+    _loadDataPengguna();
   }
 
   @override
@@ -35,7 +36,6 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
     super.dispose();
   }
 
-  // Method untuk memuat nama pengguna, mirip dengan di HomeScreen
   Future<void> _loadDataPengguna() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -69,6 +69,7 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
     try {
       double berat = double.tryParse(beratController.text) ?? 0;
       double tinggiCm = double.tryParse(tinggiController.text) ?? 0;
+      int usia = int.tryParse(usiaController.text) ?? 0;
 
       if (berat <= 0) {
         if (mounted) {
@@ -76,6 +77,7 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
             const SnackBar(content: Text('Berat badan harus lebih dari 0 kg.')),
           );
         }
+        setState(() => _isLoading = false);
         return;
       }
 
@@ -86,8 +88,20 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
                 content: Text('Tinggi badan harus lebih dari 0 cm.')),
           );
         }
+        setState(() => _isLoading = false);
         return;
       }
+       if (usia <= 0) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Usia harus lebih dari 0 tahun.')),
+          );
+        }
+        setState(() => _isLoading = false);
+        return;
+      }
+
 
       double tinggiM = tinggiCm / 100;
       double imt = berat / (tinggiM * tinggiM);
@@ -97,19 +111,22 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
 
       if (imt < 18.5) {
         newStatusGizi = 'Kurang';
-        newRekomendasi = 'Konsumsi makanan tinggi kalori dan protein';
-      } else if (imt > 25) {
-        newStatusGizi = 'Berlebih';
-        newRekomendasi = 'Kurangi makanan berlemak dan perbanyak sayur';
-      } else {
+        newRekomendasi =
+            'Perbanyak konsumsi makanan tinggi kalori dan protein seperti daging, telur, alpukat, dan kacang-kacangan. Pastikan porsi makan lebih sering.';
+      } else if (imt >= 18.5 && imt <= 24.9) {
         newStatusGizi = 'Normal';
-        newRekomendasi = 'Makanan 4 Sehat 5 Sempurna';
+        newRekomendasi =
+            'Pertahankan pola makan seimbang dengan variasi 4 sehat 5 sempurna. Cukupi kebutuhan sayur, buah, karbohidrat kompleks, protein, dan lemak baik.';
+      } else if (imt >= 25 && imt <= 29.9) {
+        newStatusGizi = 'Berlebih';
+        newRekomendasi =
+            'Kurangi porsi makan, batasi makanan tinggi lemak jenuh, gula, dan garam. Perbanyak konsumsi serat dari sayur dan buah, serta tingkatkan aktivitas fisik.';
+      } else { // IMT >= 30
+        newStatusGizi = 'Obesitas';
+        newRekomendasi =
+            'Segera konsultasikan dengan ahli gizi atau dokter. Perlu perubahan gaya hidup signifikan meliputi diet rendah kalori, tinggi serat, dan peningkatan aktivitas fisik secara teratur.';
       }
 
-      setState(() {
-        statusGizi = newStatusGizi;
-        rekomendasi = newRekomendasi;
-      });
 
       User? user = FirebaseAuth.instance.currentUser;
       if (user == null) {
@@ -119,6 +136,7 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
                 content: Text('Anda harus login untuk menyimpan data.')),
           );
         }
+        setState(() => _isLoading = false);
         return;
       }
 
@@ -130,7 +148,7 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
         'tinggiBadan': tinggiCm,
         'imt': imt.isNaN || imt.isInfinite
             ? null
-            : double.parse(imt.toStringAsFixed(2)),
+            : double.parse(imt.toStringAsFixed(1)), // Ubah ke 1 angka desimal
         'statusGizi': newStatusGizi,
         'rekomendasi': newRekomendasi,
         'tanggalPengecekan': FieldValue.serverTimestamp(),
@@ -139,12 +157,21 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
       await FirebaseFirestore.instance
           .collection('riwayatCekGizi')
           .add(dataToSave);
-
+      
       if (mounted) {
+        setState(() {
+          statusGizi = newStatusGizi;
+          rekomendasi = newRekomendasi;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
               content: Text('Status gizi berhasil dihitung dan disimpan.')),
         );
+        // Pertimbangkan untuk membersihkan field setelah berhasil atau navigasi
+        // namaController.clear();
+        // usiaController.clear();
+        // beratController.clear();
+        // tinggiController.clear();
       }
     } catch (e) {
       if (mounted) {
@@ -162,34 +189,22 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
     }
   }
 
-  IconData _getEmoticonForStatus(String status) {
-    switch (status) {
-      case 'Kurang':
-        return Icons.sentiment_very_dissatisfied;
-      case 'Berlebih':
-        return Icons.sentiment_dissatisfied; // Atau Icons.mood_bad
-      case 'Normal':
-      default:
-        return Icons.sentiment_very_satisfied;
-    }
-  }
-
-  Color _getColorForStatus(String status, BuildContext context) {
-    switch (status) {
-      case 'Kurang':
-        return const Color.fromARGB(255, 187, 255, 0); // Kuning-hijau
-      case 'Berlebih':
-        return const Color.fromARGB(255, 255, 0, 0); // Merah
-      case 'Normal':
-      default:
-        return const Color.fromARGB(255, 34, 255, 0); // Hijau cerah
-    }
-  }
+  // Fungsi helper _getEmoticonForStatus dan _getColorForStatus sudah dipindahkan ke gizi_helpers.dart
+  // Namun, jika Anda ingin warna yang berbeda khusus untuk halaman ini, Anda bisa mendefinisikannya di sini
+  // atau memodifikasi gizi_helpers.dart untuk menerima parameter tema/konteks yang berbeda.
+  // Untuk saat ini, kita akan menggunakan yang dari gizi_helpers.dart.
 
   @override
   Widget build(BuildContext context) {
+    // Menggunakan warna dari gizi_helpers.dart, namun jika ingin spesifik untuk halaman ini:
+    Color colorKurang = const Color.fromARGB(255, 235, 220, 52); // Kuning
+    Color colorNormal = const Color.fromARGB(255, 76, 175, 80); // Hijau
+    Color colorBerlebih = const Color.fromARGB(255, 255, 82, 82); // Merah
+    Color colorObesitas = const Color.fromARGB(255, 180, 50, 50); // Merah Tua
+
+
     return Scaffold(
-      drawer: Drawer( // Tambahkan Drawer di sini
+      drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
@@ -201,10 +216,13 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
                 children: [
                   const Text(
                     'Giziku App',
-                    style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    'Halo, $_namaPengguna', // Gunakan _namaPengguna dari state
+                    'Halo, $_namaPengguna',
                     style: const TextStyle(color: Colors.white70, fontSize: 16),
                   ),
                   const SizedBox(height: 8),
@@ -215,7 +233,7 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
               leading: const Icon(Icons.person_outline),
               title: const Text('Profil'),
               onTap: () {
-                Navigator.pop(context); // Tutup drawer terlebih dahulu
+                Navigator.pop(context);
                 Navigator.pushNamed(context, '/profile');
               },
             ),
@@ -223,10 +241,9 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
             ListTile(
               leading: const Icon(Icons.monitor_heart),
               title: const Text('Pemantauan Gizi'),
+              tileColor: Theme.of(context).colorScheme.primary.withOpacity(0.1), // Menandai halaman aktif
               onTap: () {
                 Navigator.pop(context);
-                // Jika sudah di halaman Pemantauan Gizi, tidak perlu navigasi lagi
-                // Navigator.pushNamed(context, '/pemantauan_gizi'); 
               },
             ),
             ListTile(
@@ -266,43 +283,34 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
       ),
       appBar: AppBar(
         title: const Text('Pemantauan Gizi'),
-        leading: Builder(
-          builder: (BuildContext context) {
-            // Cek apakah ada drawer, jika tidak ada, tampilkan tombol back standar
-            if (Scaffold.maybeOf(context)?.hasDrawer ?? false) {
-              return IconButton(
-                icon: const Icon(Icons.menu),
-                onPressed: () => Scaffold.of(context).openDrawer(),
-              );
-            }
-            return BackButton(); // Tombol back standar jika tidak ada drawer
-          },
-        ),),
-      body: Padding(
+        // Leading button (menu atau back) akan otomatis ditangani oleh Flutter
+        // berdasarkan keberadaan Drawer.
+      ),
+      body: SingleChildScrollView( // Menggunakan SingleChildScrollView untuk menghindari overflow
         padding: const EdgeInsets.all(16.0),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch, // Agar tombol melebar
           children: [
-            TextField(
-              controller: namaController,
-              decoration: const InputDecoration(labelText: 'Nama'),
-            ),
-            TextField(
-              controller: usiaController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Usia (Tahun)'),
-            ),
-            TextField(
-              controller: beratController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Berat Badan (Kg)'),
-            ),
-            TextField(
-              controller: tinggiController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Tinggi Badan (Cm)'),
-            ),
-            const SizedBox(height: 12),
+            _buildTextField(
+                controller: namaController, label: 'Nama Lengkap Anak'),
+            _buildTextField(
+                controller: usiaController,
+                label: 'Usia (Tahun)',
+                keyboardType: TextInputType.number),
+            _buildTextField(
+                controller: beratController,
+                label: 'Berat Badan (Kg)',
+                keyboardType: TextInputType.number),
+            _buildTextField(
+                controller: tinggiController,
+                label: 'Tinggi Badan (Cm)',
+                keyboardType: TextInputType.number),
+            const SizedBox(height: 20),
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                textStyle: const TextStyle(fontSize: 16),
+              ),
               onPressed: _isLoading ? null : hitungStatusGizi,
               child: _isLoading
                   ? const SizedBox(
@@ -313,126 +321,168 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
                         strokeWidth: 2.0,
                       ),
                     )
-                  : const Text('Hitung'),
+                  : const Text('Hitung & Simpan Status Gizi'),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             const Text(
-              'Status Gizi',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              'Hasil Status Gizi:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: 12),
             Icon(
-              _getEmoticonForStatus(statusGizi),
-              size: 80,
-              color: _getColorForStatus(statusGizi, context),
+              getEmoticonForStatus(statusGizi), // Menggunakan helper
+              size: 70,
+              color: getColorForStatus(statusGizi, context), // Menggunakan helper
             ),
-            const SizedBox(height: 5),
+            const SizedBox(height: 8),
             Text(
-              statusGizi, // Display the current status
+              statusGizi,
               style: TextStyle(
-                fontSize: 18,
+                fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: _getColorForStatus(statusGizi, context),
+                color: getColorForStatus(statusGizi, context), // Menggunakan helper
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  DotWithText(text: 'Kurang', color: colorKurang),
+                  DotWithText(text: 'Normal', color: colorNormal),
+                  DotWithText(text: 'Berlebih', color: colorBerlebih),
+                  DotWithText(text: 'Obesitas', color: colorObesitas),
+                ],
               ),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: const [
-                DotWithText(
-                    text: 'Kurang', color: Color.fromARGB(255, 187, 255, 0)),
-                DotWithText(
-                    text: 'Normal', color: Color.fromARGB(255, 34, 255, 0)),
-                DotWithText(
-                    text: 'Berlebih', color: Color.fromARGB(255, 255, 0, 0)),
-              ],
-            ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             const Text(
-              'Rekomendasi Makanan',
-              style: TextStyle(fontWeight: FontWeight.bold),
+              'Rekomendasi Makanan:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Theme.of(context).colorScheme.outline.withOpacity(0.5))
               ),
-              child: Text(rekomendasi, textAlign: TextAlign.center),
+              child: Text(
+                rekomendasi,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 15),
+              ),
             ),
+             const SizedBox(height: 24), // Spasi tambahan di akhir
           ],
         ),
       ),
       bottomNavigationBar: BottomAppBar(
-        color: Colors.white,
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 6.0,
+        color: Colors.white, // Atau Theme.of(context).bottomAppBarTheme.color
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            // Tombol Back
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                  color: const Color(0xFF018175),
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                const Text(
-                  'Back',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF018175)),
-                ),
-              ],
+            _buildBottomNavItem(
+              icon: Icons.arrow_back_ios_new_rounded,
+              label: 'Back',
+              onPressed: () {
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context);
+                }
+              },
             ),
-
-            // Tombol Home (tengah, lebih besar seperti FAB)
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: const Color(0xFF018175),
-                  ),
-                  child: IconButton(
-                    icon: const Icon(Icons.home),
-                    iconSize: 30,
-                    color: Colors.white,
-                    onPressed: () {
-                      Navigator.pushNamedAndRemoveUntil(
-                        context,
-                        '/home',
-                        (route) => false,
-                      );
-                    },
-                  ),
-                ),
-              ],
+            _buildBottomNavItem(
+              icon: Icons.home,
+              label: 'Home',
+              isCentral: true,
+              onPressed: () {
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  '/home',
+                  (route) => false,
+                );
+              },
             ),
-
-            // Tombol Tambah Makanan
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.add_circle_outline),
-                  color: const Color(0xFF018175),
-                  onPressed: () {
-                    Navigator.of(context).pushNamed('/tambahmakanan');
-                  },
-                ),
-                const Text(
-                  'Tambah',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF018175)),
-                ),
-              ],
+            _buildBottomNavItem(
+              icon: Icons.add_circle_outline,
+              label: 'Tambah',
+              onPressed: () {
+                Navigator.of(context).pushNamed('/tambahmakanan');
+              },
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          filled: true,
+          fillColor: Colors.white.withOpacity(0.9),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNavItem({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    bool isCentral = false,
+  }) {
+    final color = isCentral ? Colors.white : const Color(0xFF018175);
+    final iconColor = isCentral ? Colors.white : const Color(0xFF018175);
+    final backgroundColor = isCentral ? const Color(0xFF018175) : Colors.transparent;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        if (isCentral)
+          Container(
+            padding: const EdgeInsets.all(4), // Padding untuk lingkaran FAB
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: backgroundColor,
+            ),
+            child: IconButton(
+              icon: Icon(icon, color: iconColor),
+              iconSize: 30,
+              onPressed: onPressed,
+            ),
+          )
+        else
+          IconButton(
+            icon: Icon(icon, color: iconColor),
+            onPressed: onPressed,
+          ),
+        if (!isCentral) // Hanya tampilkan teks jika bukan tombol tengah
+          Text(
+            label,
+            style: TextStyle(fontSize: 12, color: color),
+          ),
+      ],
     );
   }
 }
@@ -445,11 +495,12 @@ class DotWithText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column( // Mengubah menjadi Column agar lebih rapi jika teks panjang
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.circle, color: color, size: 10),
-        const SizedBox(width: 4),
-        Text(text),
+        Icon(Icons.circle, color: color, size: 12),
+        const SizedBox(height: 2), // Sedikit jarak antara dot dan teks
+        Text(text, style: const TextStyle(fontSize: 11)),
       ],
     );
   }

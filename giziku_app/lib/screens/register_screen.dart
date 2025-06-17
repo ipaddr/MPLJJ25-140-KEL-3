@@ -49,6 +49,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       if (user != null) {
         await user.sendEmailVerification();
+        // Update display name jika nama tersedia
+        if (namaController.text.trim().isNotEmpty) {
+          await user.updateDisplayName(namaController.text.trim());
+        }
+
 
         try {
           // Simpan data tambahan pengguna ke Firestore
@@ -156,7 +161,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Column(
               children: [
                 const SizedBox(height: 20),
-                Image.asset('assets/logo.png', height: 120),
+                Image.asset('assets/images/logo.png', height: 120),
                 const SizedBox(height: 30),
                 TextField(
                   controller: namaController,
