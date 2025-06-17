@@ -123,6 +123,7 @@ class _LoginScreenState extends State<LoginScreen> {
           child: AnimatedSwitcher(
             duration: const Duration(milliseconds: 500),
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
             child: _isLoading
                 ? const CircularProgressIndicator(color: Colors.white)
                 : SingleChildScrollView(
@@ -142,6 +143,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
 =======
+=======
+>>>>>>> Stashed changes
             child:
                 _isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
@@ -164,6 +167,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 filled: true,
                                 fillColor: Colors.white,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
                               ),
                               validator:
@@ -172,6 +178,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                           ? 'Username wajib diisi'
                                           : null,
                             ),
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
                             validator: (value) =>
                                 value!.isEmpty ? 'Username wajib diisi' : null,
@@ -186,6 +193,8 @@ class _LoginScreenState extends State<LoginScreen> {
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(8.0),
 =======
+=======
+>>>>>>> Stashed changes
                             const SizedBox(height: 16),
                             TextFormField(
                               controller: _passwordController,
@@ -198,6 +207,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 ),
                                 filled: true,
                                 fillColor: Colors.white,
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
                               ),
                               validator:
@@ -206,6 +218,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                           ? 'Password wajib diisi'
                                           : null,
                             ),
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
                             validator: (value) =>
                                 value!.isEmpty ? 'Password wajib diisi' : null,
@@ -218,6 +231,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 context,
                                 '/forgetpassword',
 =======
+=======
+>>>>>>> Stashed changes
                             const SizedBox(height: 10),
                             Align(
                               alignment: Alignment.centerRight,
@@ -245,6 +260,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8.0),
                                 ),
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
                               ),
                               child: const Text(
@@ -262,6 +280,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                 style: TextStyle(color: Colors.white),
                               ),
                             ),
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
                           ),
                           const SizedBox(height: 10),
@@ -292,6 +311,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ],
+=======
+                          ],
+                        ),
+>>>>>>> Stashed changes
 =======
                           ],
                         ),

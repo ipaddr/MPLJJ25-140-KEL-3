@@ -83,9 +83,15 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
         centerTitle: true,
         leading: IconButton(
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
  Navigator.pop(context);
+=======
+          icon: const Icon(Icons.menu),
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+>>>>>>> Stashed changes
 =======
           icon: const Icon(Icons.menu),
           onPressed: () {
@@ -108,11 +114,14 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
                   image: AssetImage(gambarMakanan[selectedTipe]!),
                   fit: BoxFit.cover,
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                   // onError is not directly available for DecorationImage
                   // but if you switch to Image.asset, you can use errorBuilder:
                   // errorBuilder: (context, error, stackTrace) {
                   //   return const Icon(Icons.broken_image, size: 50, color: Colors.red);
                   // },
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
                 ),
@@ -128,6 +137,7 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
               ),
               items:
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                   deskripsiMakanan.entries.map((e) {
                     return DropdownMenuItem(
                       value: e.key,
@@ -135,6 +145,8 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
                     );
                   }).toList(),
 =======
+=======
+>>>>>>> Stashed changes
                   deskripsiMakanan.entries
                       .map(
                         (e) => DropdownMenuItem(
@@ -143,13 +155,19 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
                         ),
                       )
                       .toList(),
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
               onChanged: (val) {
                 if (val != null) {
                   setState(() {
                     selectedTipe = val;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                     deskripsiController.text = deskripsiMakanan[selectedTipe] ?? ''; // Update here
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
                   });
@@ -161,6 +179,7 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
             TextFormField(
               readOnly: true,
               controller: deskripsiController,
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
               decoration: const InputDecoration(
                 labelText: 'Detail Paket',
@@ -185,6 +204,8 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
 
             // Tombol Simpan yang Diperbarui
 =======
+=======
+>>>>>>> Stashed changes
               decoration: InputDecoration(
                 labelText: 'Detail Paket',
                 border: const UnderlineInputBorder(),
@@ -194,6 +215,9 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
 
             const Spacer(),
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
             SizedBox(
               width: double.infinity,
@@ -292,6 +316,9 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
                   'Simpan',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                 ),
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
               ),
             ),

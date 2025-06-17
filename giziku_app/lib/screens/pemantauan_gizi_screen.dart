@@ -9,7 +9,11 @@ class PemantauanGiziScreen extends StatefulWidget {
 
 class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   // Controller untuk nama sudah dihapus
+=======
+  final TextEditingController namaController = TextEditingController();
+>>>>>>> Stashed changes
 =======
   final TextEditingController namaController = TextEditingController();
 >>>>>>> Stashed changes
@@ -20,6 +24,7 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
   String statusGizi = 'Normal'; // Default
   String rekomendasi = 'Makanan 4 Sehat 5 Sempurna';
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 
   String _namaPengguna = "Pengguna";
@@ -332,6 +337,8 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
 <<<<<<< HEAD
             // TextField untuk nama sudah dihapus dari sini
 =======
+=======
+>>>>>>> Stashed changes
   void hitungStatusGizi() {
     double berat = double.tryParse(beratController.text) ?? 0;
     double tinggi = double.tryParse(tinggiController.text) ?? 1;
@@ -363,6 +370,9 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
               controller: namaController,
               decoration: const InputDecoration(labelText: 'Nama'),
             ),
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
             TextField(
               controller: usiaController,
@@ -370,7 +380,10 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
               decoration: const InputDecoration(labelText: 'Usia (Tahun)'),
             ),
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
             const SizedBox(height: 12),
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
             TextField(
@@ -379,7 +392,10 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
               decoration: const InputDecoration(labelText: 'Berat Badan (Kg)'),
             ),
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
             const SizedBox(height: 12),
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
             TextField(
@@ -387,6 +403,7 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(labelText: 'Tinggi Badan (Cm)'),
             ),
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
             const SizedBox(height: 20),
             ElevatedButton(
@@ -453,6 +470,8 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
                 ),
               ),
 =======
+=======
+>>>>>>> Stashed changes
             const SizedBox(height: 12),
             ElevatedButton(
               onPressed: hitungStatusGizi,
@@ -476,11 +495,15 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
                 DotWithText(text: 'Normal', color: Colors.black),
                 DotWithText(text: 'Berlebih', color: Colors.black),
               ],
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
             ),
             const SizedBox(height: 20),
             const Text(
               'Rekomendasi Makanan',
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
 =======
@@ -526,10 +549,14 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
 =======
               style: TextStyle(fontWeight: FontWeight.bold),
 >>>>>>> Stashed changes
+=======
+              style: TextStyle(fontWeight: FontWeight.bold),
+>>>>>>> Stashed changes
             ),
             const SizedBox(height: 8),
             Container(
               width: double.infinity,
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -577,6 +604,8 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
             ),
 <<<<<<< HEAD
 =======
+=======
+>>>>>>> Stashed changes
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.white.withOpacity(0.3),
@@ -609,6 +638,9 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
                 ),
               ],
             ),
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
             // Tombol Home (tengah, lebih besar seperti FAB)
@@ -618,9 +650,15 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
                 Container(
                   padding: const EdgeInsets.all(4),
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     color: Color(0xFF018175),
+=======
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF018175),
+>>>>>>> Stashed changes
 =======
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
@@ -646,6 +684,7 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
                 ),
               ],
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 =======
             _buildBottomNavItem(
               icon: Icons.home,
@@ -667,6 +706,8 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
                 Navigator.of(context).pushNamed('/tambahmakanan');
               },
 =======
+=======
+>>>>>>> Stashed changes
             ),
 
             // Tombol Tambah Makanan
@@ -685,6 +726,9 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
                   style: TextStyle(fontSize: 12, color: Color(0xFF018175)),
                 ),
               ],
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
             ),
           ],
@@ -692,6 +736,7 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
       ),
     );
   }
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 
   Widget _buildTextField({
@@ -765,6 +810,10 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
 }
 
 >>>>>>> Stashed changes
+=======
+}
+
+>>>>>>> Stashed changes
 class DotWithText extends StatelessWidget {
   final String text;
   final Color color;
@@ -774,6 +823,7 @@ class DotWithText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     return Column( // Mengubah menjadi Column agar lebih rapi jika teks panjang
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -781,17 +831,25 @@ class DotWithText extends StatelessWidget {
         const SizedBox(height: 2), // Sedikit jarak antara dot dan teks
         Text(text, style: const TextStyle(fontSize: 11)),
 =======
+=======
+>>>>>>> Stashed changes
     return Row(
       children: [
         Icon(Icons.circle, color: color, size: 10),
         const SizedBox(width: 4),
         Text(text),
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
       ],
     );
   }
 }
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 >>>>>>> ebe7fe1d95423783d38848f5a25e3ef7843a0aa1
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes

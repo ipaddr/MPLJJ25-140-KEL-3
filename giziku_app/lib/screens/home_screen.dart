@@ -166,10 +166,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               onTap: () {
                 Navigator.pop(context);
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                 Navigator.pushNamed(context, '/pemantauan_gizi').then((_) {
                   // Setelah kembali dari halaman pemantauan gizi, muat ulang data
                   _loadDataGiziTerakhir();
                 });
+=======
+                Navigator.pushNamed(context, '/pemantauan_gizi');
+>>>>>>> Stashed changes
 =======
                 Navigator.pushNamed(context, '/pemantauan_gizi');
 >>>>>>> Stashed changes
