@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:giziku_app/screens/profil_screen.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/date_symbol_data_local.dart';
-<<<<<<< HEAD
-
-// User screens
-=======
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 //User screens
@@ -18,39 +15,22 @@ import 'screens/splash_screen.dart';
 import 'screens/tambah_makanan_screen.dart';
 import 'screens/makanan_ditambahkan_screen.dart';
 import 'screens/pemantauan_gizi_screen.dart';
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 import 'screens/riwayat_ambil_makanan_screen.dart';
 import 'screens/riwayat_cek_gizi_screen.dart';
 import 'screens/dashboard_statistik_screen.dart';
-=======
-=======
->>>>>>> Stashed changes
-
-// Import admin screens
-import 'screens/admin_home_screen.dart';
-import 'screens/admin_dashboard_makanan_screen.dart';
-import 'screens/admin_kelola_edukasi_screen.dart';
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
 // Admin screens
 import 'screens/admin_home_screen.dart';
 import 'screens/admin_dashboard_makanan_screen.dart';
 import 'screens/admin_kelola_edukasi_screen.dart';
 
-// Titik masuk utama aplikasi. Flutter akan selalu mencari fungsi ini pertama kali.
 void main() async {
-  // Memastikan semua komponen Flutter siap sebelum aplikasi dijalankan.
   WidgetsFlutterBinding.ensureInitialized();
-  // Menginisialisasi dukungan format tanggal untuk Bahasa Indonesia.
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   await initializeDateFormatting(
     'id_ID',
     null,
-  );
-  // Menjalankan widget utama aplikasi.
+  ); // Penting untuk tanggal Bahasa Indonesia
   runApp(const MyApp());
 }
 
@@ -61,9 +41,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Giziku App',
-      // Menyembunyikan banner "Debug" di pojok kanan atas.
       debugShowCheckedModeBanner: false,
-      // Mengatur tema visual global untuk seluruh aplikasi.
       theme: ThemeData(
         useMaterial3: true,
         scaffoldBackgroundColor: const Color(0xFF10b68d),
@@ -96,9 +74,7 @@ class MyApp extends StatelessWidget {
           style: TextButton.styleFrom(foregroundColor: Colors.white),
         ),
       ),
-      // Rute awal yang akan ditampilkan saat aplikasi pertama kali dibuka.
       initialRoute: '/splash',
-      // Daftar semua halaman (rute) yang ada di dalam aplikasi.
       routes: {
         '/splash': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
@@ -106,56 +82,26 @@ class MyApp extends StatelessWidget {
         '/home': (context) => const HomeScreen(),
         '/forgetpassword': (context) => const ForgetPasswordScreen(),
         '/pemantauan_gizi': (context) => const PemantauanGiziScreen(),
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
         '/tambahmakanan': (context) => const TambahMakananScreen(),
         '/makanan_ditambahkan': (context) => const MakananDitambahkanScreen(),
         '/riwayat_ambil_makanan': (context) =>
             const RiwayatAmbilMakananScreen(),
         '/riwayat_cek_gizi': (context) => const RiwayatCekGiziScreen(),
-        '/edukasi': (context) => const EdukasiScreen(),
+        '/edukasi': (context) => EdukasiScreen(),
         '/dashboard': (context) => const StatistikBadanChart(),
         '/profile': (context) => const ProfileScreen(),
-=======
-=======
-
-        // User routes
-        '/tambahmakanan': (context) => const TambahMakananScreen(),
-        '/makanan_ditambahkan': (context) => const MakananDitambahkanScreen(),
 
         // Admin routes
-        '/admin_home': (context) => const AdminHomeScreen(),
-        '/admin_dashboard_makanan':
-            (context) => const AdminDashboardMakananScreen(),
-        '/admin_kelola_edukasi': (context) => const AdminKelolaEdukasiScreen(),
-      },
->>>>>>> Stashed changes
-
-        // User routes
-        '/tambahmakanan': (context) => const TambahMakananScreen(),
-        '/makanan_ditambahkan': (context) => const MakananDitambahkanScreen(),
-
-        // Admin routes
-        '/admin_home': (context) => const AdminHomeScreen(),
-        '/admin_dashboard_makanan':
-            (context) => const AdminDashboardMakananScreen(),
-        '/admin_kelola_edukasi': (context) => const AdminKelolaEdukasiScreen(),
-      },
->>>>>>> Stashed changes
-
-        // Rute untuk halaman admin
         '/admin_home': (context) => const AdminHomeScreen(),
         '/admin_dashboard_makanan': (context) =>
             const AdminDashboardMakananScreen(),
         '/admin_kelola_edukasi': (context) => const AdminKelolaEdukasiScreen(),
       },
-      // Fungsi yang akan dipanggil jika aplikasi mencoba navigasi ke rute yang tidak terdaftar.
       onUnknownRoute: (settings) {
         return MaterialPageRoute(
           builder: (context) => Scaffold(
-            appBar: AppBar(title: const Text('404 - Halaman Tidak Ditemukan')),
-            body: const Center(
-                child: Text('Maaf, halaman yang Anda tuju tidak ada.')),
+            appBar: AppBar(title: const Text('404')),
+            body: const Center(child: Text('Halaman tidak ditemukan')),
           ),
         );
       },

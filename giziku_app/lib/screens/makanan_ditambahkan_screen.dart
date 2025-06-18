@@ -5,18 +5,10 @@ class MakananDitambahkanScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
     final args =
         ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
     final String? deskripsi = args?['deskripsi'] as String?;
     final String? tanggal = args?['tanggal'] as String?;
-=======
-=======
->>>>>>> Stashed changes
-    final String? deskripsi =
-        ModalRoute.of(context)?.settings.arguments as String?;
->>>>>>> Stashed changes
 
     final colorScheme = Theme.of(context).colorScheme;
 
