@@ -2,18 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+class AdminRegisterScreen extends StatefulWidget {
+  const AdminRegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  State<AdminRegisterScreen> createState() => _AdminRegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen>
+class _AdminRegisterScreenState extends State<AdminRegisterScreen>
     with TickerProviderStateMixin {
   // Controllers untuk input form
   final TextEditingController namaController = TextEditingController();
-  final TextEditingController nikController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController teleponController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -54,7 +53,7 @@ class _RegisterScreenState extends State<RegisterScreen>
     _animationController.forward();
   }
 
-  Future<void> daftar() async {
+  Future<void> _registerAdmin() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
@@ -73,31 +72,30 @@ class _RegisterScreenState extends State<RegisterScreen>
       User? user = userCredential.user;
 
       if (user != null) {
-        await user.sendEmailVerification();
-
-        // Update display name jika nama tersedia
+        // Update display name
         if (namaController.text.trim().isNotEmpty) {
           await user.updateDisplayName(namaController.text.trim());
         }
 
         try {
-          // Simpan data tambahan pengguna ke Firestore
+          // Simpan data admin ke Firestore collection 'admins'
           await FirebaseFirestore.instance
-              .collection('users')
+              .collection('admins')
               .doc(user.uid)
               .set({
             'nama': namaController.text.trim(),
-            'nik': nikController.text.trim(),
             'telepon': teleponController.text.trim(),
             'email': user.email,
+            'role': 'admin',
             'createdAt': FieldValue.serverTimestamp(),
+            'isActive': true,
           });
 
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text(
-                'Registrasi berhasil! Silakan cek email Anda untuk verifikasi.',
+                'Registrasi admin berhasil! Anda sekarang dapat login sebagai admin.',
                 style: TextStyle(color: Colors.white),
               ),
               backgroundColor: Colors.green,
@@ -112,7 +110,7 @@ class _RegisterScreenState extends State<RegisterScreen>
           if (!mounted) return;
           setState(() {
             errorMessage =
-                'Registrasi akun berhasil & email verifikasi terkirim, namun gagal menyimpan detail profil. Silakan coba login dan lengkapi profil Anda nanti.';
+                'Registrasi akun berhasil, namun gagal menyimpan data admin. Silakan hubungi super admin.';
           });
           print('Firestore error: $e');
         }
@@ -125,7 +123,7 @@ class _RegisterScreenState extends State<RegisterScreen>
           message = 'Password yang diberikan terlalu lemah.';
           break;
         case 'email-already-in-use':
-          message = 'Akun sudah ada untuk email tersebut.';
+          message = 'Email sudah terdaftar.';
           break;
         case 'invalid-email':
           message = 'Format email tidak valid.';
@@ -155,7 +153,6 @@ class _RegisterScreenState extends State<RegisterScreen>
   void dispose() {
     _animationController.dispose();
     namaController.dispose();
-    nikController.dispose();
     emailController.dispose();
     teleponController.dispose();
     passwordController.dispose();
@@ -174,9 +171,9 @@ class _RegisterScreenState extends State<RegisterScreen>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF018175),
-              Color(0xFF10b68d),
-              Color(0xFF4fd1c7),
+              Color(0xFF2E7D32), // Dark Green for Admin
+              Color(0xFF388E3C),
+              Color(0xFF43A047),
             ],
           ),
         ),
@@ -195,7 +192,7 @@ class _RegisterScreenState extends State<RegisterScreen>
               ),
               flexibleSpace: FlexibleSpaceBar(
                 title: const Text(
-                  'Daftar Akun',
+                  'Daftar Admin',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -207,9 +204,9 @@ class _RegisterScreenState extends State<RegisterScreen>
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        Color(0xFF018175),
-                        Color(0xFF10b68d),
-                        Color(0xFF4fd1c7),
+                        Color(0xFF2E7D32),
+                        Color(0xFF388E3C),
+                        Color(0xFF43A047),
                       ],
                     ),
                   ),
@@ -237,7 +234,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                               children: [
                                 const SizedBox(height: 20),
 
-                                // Logo Container
+                                // Admin Icon Container
                                 Container(
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
@@ -251,17 +248,10 @@ class _RegisterScreenState extends State<RegisterScreen>
                                       ),
                                     ],
                                   ),
-                                  child: Image.asset(
-                                    'assets/images/Logo.png',
-                                    height: isTablet ? 100 : 80,
-                                    fit: BoxFit.contain,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Icon(
-                                        Icons.person_add,
-                                        size: isTablet ? 80 : 60,
-                                        color: Colors.white,
-                                      );
-                                    },
+                                  child: Icon(
+                                    Icons.admin_panel_settings,
+                                    size: isTablet ? 80 : 60,
+                                    color: Colors.white,
                                   ),
                                 ),
 
@@ -269,7 +259,7 @@ class _RegisterScreenState extends State<RegisterScreen>
 
                                 // Welcome Text
                                 Text(
-                                  'Bergabung dengan GiziKu',
+                                  'Daftar sebagai Admin',
                                   style: TextStyle(
                                     fontSize: isTablet ? 26 : 22,
                                     fontWeight: FontWeight.bold,
@@ -285,7 +275,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  'Buat akun untuk memantau gizi anak',
+                                  'Buat akun admin untuk mengelola sistem',
                                   style: TextStyle(
                                     fontSize: isTablet ? 16 : 14,
                                     color: Colors.white.withOpacity(0.9),
@@ -318,10 +308,11 @@ class _RegisterScreenState extends State<RegisterScreen>
                                           controller: namaController,
                                           decoration: InputDecoration(
                                             labelText: 'Nama Lengkap',
-                                            hintText: 'Masukkan nama lengkap',
+                                            hintText:
+                                                'Masukkan nama lengkap admin',
                                             prefixIcon: const Icon(
                                               Icons.person_outlined,
-                                              color: Color(0xFF018175),
+                                              color: Color(0xFF2E7D32),
                                             ),
                                             border: OutlineInputBorder(
                                               borderRadius:
@@ -334,7 +325,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                               borderSide: const BorderSide(
-                                                color: Color(0xFF018175),
+                                                color: Color(0xFF2E7D32),
                                                 width: 2,
                                               ),
                                             ),
@@ -352,60 +343,17 @@ class _RegisterScreenState extends State<RegisterScreen>
 
                                         const SizedBox(height: 16),
 
-                                        // NIK Field
-                                        TextFormField(
-                                          controller: nikController,
-                                          keyboardType: TextInputType.number,
-                                          decoration: InputDecoration(
-                                            labelText: 'NIK',
-                                            hintText: 'Masukkan NIK',
-                                            prefixIcon: const Icon(
-                                              Icons.badge_outlined,
-                                              color: Color(0xFF018175),
-                                            ),
-                                            border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              borderSide: BorderSide(
-                                                color: Colors.grey.shade300,
-                                              ),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              borderSide: const BorderSide(
-                                                color: Color(0xFF018175),
-                                                width: 2,
-                                              ),
-                                            ),
-                                            filled: true,
-                                            fillColor: Colors.grey.shade50,
-                                          ),
-                                          validator: (value) {
-                                            if (value == null ||
-                                                value.isEmpty) {
-                                              return 'NIK wajib diisi';
-                                            }
-                                            if (value.length != 16) {
-                                              return 'NIK harus 16 digit';
-                                            }
-                                            return null;
-                                          },
-                                        ),
-
-                                        const SizedBox(height: 16),
-
                                         // Email Field
                                         TextFormField(
                                           controller: emailController,
                                           keyboardType:
                                               TextInputType.emailAddress,
                                           decoration: InputDecoration(
-                                            labelText: 'Email',
-                                            hintText: 'Masukkan email',
+                                            labelText: 'Email Admin',
+                                            hintText: 'Masukkan email admin',
                                             prefixIcon: const Icon(
                                               Icons.email_outlined,
-                                              color: Color(0xFF018175),
+                                              color: Color(0xFF2E7D32),
                                             ),
                                             border: OutlineInputBorder(
                                               borderRadius:
@@ -418,7 +366,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                               borderSide: const BorderSide(
-                                                color: Color(0xFF018175),
+                                                color: Color(0xFF2E7D32),
                                                 width: 2,
                                               ),
                                             ),
@@ -428,7 +376,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                                           validator: (value) {
                                             if (value == null ||
                                                 value.isEmpty) {
-                                              return 'Email wajib diisi';
+                                              return 'Email admin wajib diisi';
                                             }
                                             if (!value.contains('@')) {
                                               return 'Format email tidak valid';
@@ -448,7 +396,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                                             hintText: 'Masukkan nomor telepon',
                                             prefixIcon: const Icon(
                                               Icons.phone_outlined,
-                                              color: Color(0xFF018175),
+                                              color: Color(0xFF2E7D32),
                                             ),
                                             border: OutlineInputBorder(
                                               borderRadius:
@@ -461,7 +409,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                               borderSide: const BorderSide(
-                                                color: Color(0xFF018175),
+                                                color: Color(0xFF2E7D32),
                                                 width: 2,
                                               ),
                                             ),
@@ -488,14 +436,14 @@ class _RegisterScreenState extends State<RegisterScreen>
                                             hintText: 'Masukkan password',
                                             prefixIcon: const Icon(
                                               Icons.lock_outlined,
-                                              color: Color(0xFF018175),
+                                              color: Color(0xFF2E7D32),
                                             ),
                                             suffixIcon: IconButton(
                                               icon: Icon(
                                                 _obscurePassword
                                                     ? Icons.visibility_off
                                                     : Icons.visibility,
-                                                color: const Color(0xFF018175),
+                                                color: const Color(0xFF2E7D32),
                                               ),
                                               onPressed: () {
                                                 setState(() {
@@ -515,7 +463,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                                               borderRadius:
                                                   BorderRadius.circular(12),
                                               borderSide: const BorderSide(
-                                                color: Color(0xFF018175),
+                                                color: Color(0xFF2E7D32),
                                                 width: 2,
                                               ),
                                             ),
@@ -563,11 +511,12 @@ class _RegisterScreenState extends State<RegisterScreen>
                                           width: double.infinity,
                                           height: 50,
                                           child: ElevatedButton(
-                                            onPressed:
-                                                _isLoading ? null : daftar,
+                                            onPressed: _isLoading
+                                                ? null
+                                                : _registerAdmin,
                                             style: ElevatedButton.styleFrom(
                                               backgroundColor:
-                                                  const Color(0xFF018175),
+                                                  const Color(0xFF2E7D32),
                                               foregroundColor: Colors.white,
                                               shape: RoundedRectangleBorder(
                                                 borderRadius:
@@ -586,7 +535,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                                                     ),
                                                   )
                                                 : Text(
-                                                    'Daftar Sekarang',
+                                                    'Daftar Admin',
                                                     style: TextStyle(
                                                       fontSize:
                                                           isTablet ? 18 : 16,
@@ -613,7 +562,8 @@ class _RegisterScreenState extends State<RegisterScreen>
                                         color: Colors.white.withOpacity(0.9),
                                       ),
                                       children: const [
-                                        TextSpan(text: 'Sudah punya akun? '),
+                                        TextSpan(
+                                            text: 'Sudah punya akun admin? '),
                                         TextSpan(
                                           text: 'Login sekarang!',
                                           style: TextStyle(

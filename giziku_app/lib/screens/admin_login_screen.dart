@@ -1,18 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class ForgetPasswordScreen extends StatefulWidget {
-  const ForgetPasswordScreen({super.key});
+class AdminLoginScreen extends StatefulWidget {
+  const AdminLoginScreen({super.key});
 
   @override
-  State<ForgetPasswordScreen> createState() => _ForgetPasswordScreenState();
+  State<AdminLoginScreen> createState() => _AdminLoginScreenState();
 }
 
-class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> 
-    with TickerProviderStateMixin {
-  final TextEditingController _emailController = TextEditingController();
+class _AdminLoginScreenState extends State<AdminLoginScreen> with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscurePassword = true;
   
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -22,7 +24,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
 
@@ -49,69 +51,82 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
   void dispose() {
     _animationController.dispose();
     _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
-  Future<void> _resetPassword() async {
+  Future<void> _adminLogin() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+      });
+    }
 
     try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(
+      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
+        password: _passwordController.text,
       );
-      
-      if (!mounted) return;
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text(
-            'Link reset password telah dikirim ke email Anda',
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-      );
-      
-      // Kembali ke login screen setelah 2 detik
-      await Future.delayed(const Duration(seconds: 2));
-      if (mounted) {
-        Navigator.pop(context);
+
+      // Check if user is admin
+      DocumentSnapshot adminDoc = await FirebaseFirestore.instance
+          .collection('admins')
+          .doc(userCredential.user!.uid)
+          .get();
+
+      if (adminDoc.exists) {
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/admin_home');
+        }
+      } else {
+        // User is not admin
+        await FirebaseAuth.instance.signOut();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Anda tidak memiliki akses admin'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       }
     } on FirebaseAuthException catch (e) {
       String message;
       switch (e.code) {
         case 'user-not-found':
-          message = 'Tidak ada akun yang terdaftar dengan email ini.';
+          message = 'Tidak ada admin yang ditemukan untuk email tersebut.';
+          break;
+        case 'wrong-password':
+          message = 'Password salah.';
           break;
         case 'invalid-email':
           message = 'Format email tidak valid.';
           break;
         default:
-          message = 'Terjadi kesalahan: ${e.message}';
+          message = 'Login admin gagal: ${e.message ?? "Terjadi kesalahan"}';
       }
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              message,
-              style: const TextStyle(color: Colors.white),
-            ),
+            content: Text(message),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Terjadi kesalahan yang tidak diketahui.'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -136,9 +151,9 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Color(0xFF018175),
-              Color(0xFF10b68d),
-              Color(0xFF4fd1c7),
+              Color(0xFF2E7D32), // Dark Green for Admin
+              Color(0xFF388E3C),
+              Color(0xFF43A047),
             ],
           ),
         ),
@@ -156,7 +171,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
               ),
               flexibleSpace: FlexibleSpaceBar(
                 title: const Text(
-                  'Lupa Password',
+                  'Admin Login',
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -168,9 +183,9 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        Color(0xFF018175),
-                        Color(0xFF10b68d),
-                        Color(0xFF4fd1c7),
+                        Color(0xFF2E7D32),
+                        Color(0xFF388E3C),
+                        Color(0xFF43A047),
                       ],
                     ),
                   ),
@@ -198,7 +213,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
                               children: [
                                 const SizedBox(height: 20),
 
-                                // Icon Container
+                                // Admin Icon Container
                                 Container(
                                   padding: const EdgeInsets.all(20),
                                   decoration: BoxDecoration(
@@ -213,7 +228,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
                                     ],
                                   ),
                                   child: Icon(
-                                    Icons.lock_reset,
+                                    Icons.admin_panel_settings,
                                     size: isTablet ? 80 : 60,
                                     color: Colors.white,
                                   ),
@@ -221,11 +236,11 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
 
                                 const SizedBox(height: 32),
 
-                                // Title & Description
+                                // Welcome Text
                                 Text(
-                                  'Reset Password',
+                                  'Admin Dashboard',
                                   style: TextStyle(
-                                    fontSize: isTablet ? 28 : 24,
+                                    fontSize: isTablet ? 32 : 28,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                     shadows: [
@@ -237,20 +252,19 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
                                     ],
                                   ),
                                 ),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: 8),
                                 Text(
-                                  'Masukkan email akun Anda dan kami akan mengirimkan link untuk reset password.',
-                                  textAlign: TextAlign.center,
+                                  'Masuk dengan akun admin Anda',
                                   style: TextStyle(
-                                    fontSize: isTablet ? 16 : 14,
+                                    fontSize: isTablet ? 18 : 16,
                                     color: Colors.white.withOpacity(0.9),
-                                    height: 1.5,
+                                    fontWeight: FontWeight.w400,
                                   ),
                                 ),
 
                                 const SizedBox(height: 40),
 
-                                // Form Card
+                                // Login Form Card
                                 Container(
                                   padding: EdgeInsets.all(isTablet ? 32 : 24),
                                   decoration: BoxDecoration(
@@ -273,11 +287,11 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
                                           controller: _emailController,
                                           keyboardType: TextInputType.emailAddress,
                                           decoration: InputDecoration(
-                                            labelText: 'Email',
-                                            hintText: 'Masukkan email Anda',
+                                            labelText: 'Email Admin',
+                                            hintText: 'Masukkan email admin',
                                             prefixIcon: const Icon(
                                               Icons.email_outlined,
-                                              color: Color(0xFF018175),
+                                              color: Color(0xFF2E7D32),
                                             ),
                                             border: OutlineInputBorder(
                                               borderRadius: BorderRadius.circular(12),
@@ -288,7 +302,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
                                             focusedBorder: OutlineInputBorder(
                                               borderRadius: BorderRadius.circular(12),
                                               borderSide: const BorderSide(
-                                                color: Color(0xFF018175),
+                                                color: Color(0xFF2E7D32),
                                                 width: 2,
                                               ),
                                             ),
@@ -297,7 +311,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
                                           ),
                                           validator: (value) {
                                             if (value == null || value.isEmpty) {
-                                              return 'Email wajib diisi';
+                                              return 'Email admin wajib diisi';
                                             }
                                             if (!value.contains('@')) {
                                               return 'Format email tidak valid';
@@ -306,16 +320,69 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
                                           },
                                         ),
 
+                                        const SizedBox(height: 20),
+
+                                        // Password Field
+                                        TextFormField(
+                                          controller: _passwordController,
+                                          obscureText: _obscurePassword,
+                                          decoration: InputDecoration(
+                                            labelText: 'Password Admin',
+                                            hintText: 'Masukkan password admin',
+                                            prefixIcon: const Icon(
+                                              Icons.lock_outlined,
+                                              color: Color(0xFF2E7D32),
+                                            ),
+                                            suffixIcon: IconButton(
+                                              icon: Icon(
+                                                _obscurePassword
+                                                    ? Icons.visibility_off
+                                                    : Icons.visibility,
+                                                color: const Color(0xFF2E7D32),
+                                              ),
+                                              onPressed: () {
+                                                setState(() {
+                                                  _obscurePassword = !_obscurePassword;
+                                                });
+                                              },
+                                            ),
+                                            border: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                              borderSide: BorderSide(
+                                                color: Colors.grey.shade300,
+                                              ),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderRadius: BorderRadius.circular(12),
+                                              borderSide: const BorderSide(
+                                                color: Color(0xFF2E7D32),
+                                                width: 2,
+                                              ),
+                                            ),
+                                            filled: true,
+                                            fillColor: Colors.grey.shade50,
+                                          ),
+                                          validator: (value) {
+                                            if (value == null || value.isEmpty) {
+                                              return 'Password admin wajib diisi';
+                                            }
+                                            if (value.length < 6) {
+                                              return 'Password minimal 6 karakter';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+
                                         const SizedBox(height: 32),
 
-                                        // Reset Button
+                                        // Login Button
                                         SizedBox(
                                           width: double.infinity,
                                           height: 50,
                                           child: ElevatedButton(
-                                            onPressed: _isLoading ? null : _resetPassword,
+                                            onPressed: _isLoading ? null : _adminLogin,
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: const Color(0xFF018175),
+                                              backgroundColor: const Color(0xFF2E7D32),
                                               foregroundColor: Colors.white,
                                               shape: RoundedRectangleBorder(
                                                 borderRadius: BorderRadius.circular(12),
@@ -332,7 +399,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
                                                     ),
                                                   )
                                                 : Text(
-                                                    'Kirim Link Reset',
+                                                    'Masuk sebagai Admin',
                                                     style: TextStyle(
                                                       fontSize: isTablet ? 18 : 16,
                                                       fontWeight: FontWeight.bold,
@@ -347,9 +414,9 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
 
                                 const SizedBox(height: 24),
 
-                                // Back to Login Link
+                                // Register Admin Link
                                 TextButton(
-                                  onPressed: () => Navigator.pop(context),
+                                  onPressed: () => Navigator.pushNamed(context, '/admin_register'),
                                   child: RichText(
                                     text: TextSpan(
                                       style: TextStyle(
@@ -357,9 +424,9 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
                                         color: Colors.white.withOpacity(0.9),
                                       ),
                                       children: const [
-                                        TextSpan(text: 'Ingat password Anda? '),
+                                        TextSpan(text: 'Belum terdaftar sebagai admin? '),
                                         TextSpan(
-                                          text: 'Kembali ke Login',
+                                          text: 'Daftar Admin',
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
                                             decoration: TextDecoration.underline,

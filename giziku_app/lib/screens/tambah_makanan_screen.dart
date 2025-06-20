@@ -10,7 +10,8 @@ class TambahMakananScreen extends StatefulWidget {
   State<TambahMakananScreen> createState() => _TambahMakananScreenState();
 }
 
-class _TambahMakananScreenState extends State<TambahMakananScreen> {
+class _TambahMakananScreenState extends State<TambahMakananScreen>
+    with TickerProviderStateMixin {
   final Map<int, String> deskripsiMakanan = {
     1: 'Nasi, Ayam, Telor, Sayur, Buah',
     2: 'Nasi, Ayam, Tahu, Sayur, Buah',
@@ -30,8 +31,12 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
   int selectedTipe = 1;
   late TextEditingController deskripsiController;
   final TextEditingController tanggalController = TextEditingController();
-  DateTime? _selectedDate; // To store the selected DateTime object
-  bool _isSaving = false; // To manage loading state for the save button
+  DateTime? _selectedDate;
+  bool _isSaving = false;
+
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
@@ -39,10 +44,34 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
     deskripsiController = TextEditingController(
       text: deskripsiMakanan[selectedTipe] ?? '',
     );
+
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutBack,
+    ));
+
+    _animationController.forward();
   }
 
   @override
   void dispose() {
+    _animationController.dispose();
     deskripsiController.dispose();
     tanggalController.dispose();
     super.dispose();
@@ -54,10 +83,23 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
       initialDate: DateTime.now(),
       firstDate: DateTime(2020),
       lastDate: DateTime(2100),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: Color(0xFF018175),
+              onPrimary: Colors.white,
+              surface: Colors.white,
+              onSurface: Colors.black,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       setState(() {
-        _selectedDate = picked; // Store the picked DateTime
+        _selectedDate = picked;
         tanggalController.text = DateFormat(
           'dd MMMM yyyy',
           'id_ID',
@@ -68,192 +110,374 @@ class _TambahMakananScreenState extends State<TambahMakananScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final screenSize = MediaQuery.of(context).size;
+    final isTablet = screenSize.width > 600;
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        title: const Text('Tambah Makanan'),
-        backgroundColor: colorScheme.tertiary,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF018175),
+              Color(0xFF10b68d),
+              Color(0xFF4fd1c7),
+            ],
+          ),
         ),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        child: Column(
-          children: [
-            Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                color: Colors.grey.shade300,
-                image: DecorationImage(
-                  image: AssetImage(gambarMakanan[selectedTipe]!),
-                  fit: BoxFit.cover,
-                  // onError is not directly available for DecorationImage
-                  // but if you switch to Image.asset, you can use errorBuilder:
-                  // errorBuilder: (context, error, stackTrace) {
-                  //   return const Icon(Icons.broken_image, size: 50, color: Colors.red);
-                  // },
+        child: CustomScrollView(
+          slivers: [
+            // Modern SliverAppBar
+            SliverAppBar(
+              expandedHeight: 120,
+              floating: false,
+              pinned: true,
+              backgroundColor: Colors.transparent,
+              leading: IconButton(
+                icon:
+                    const Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                onPressed: () => Navigator.pop(context),
+              ),
+              flexibleSpace: FlexibleSpaceBar(
+                title: const Text(
+                  'Tambah Makanan',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                background: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF018175),
+                        Color(0xFF10b68d),
+                        Color(0xFF4fd1c7),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 24),
 
-            DropdownButtonFormField<int>(
-              value: selectedTipe,
-              decoration: const InputDecoration(
-                labelText: 'Tipe Paket',
-                border: UnderlineInputBorder(),
-              ),
-              items: deskripsiMakanan.entries.map((e) {
-                return DropdownMenuItem(
-                  value: e.key,
-                  child: Text('Tipe ${e.key}'),
-                );
-              }).toList(),
-              onChanged: (val) {
-                if (val != null) {
-                  setState(() {
-                    selectedTipe = val;
-                    deskripsiController.text =
-                        deskripsiMakanan[selectedTipe] ?? ''; // Update here
-                  });
-                }
-              },
-            ),
-            const SizedBox(height: 16),
+            // Main Content
+            SliverToBoxAdapter(
+              child: AnimatedBuilder(
+                animation: _animationController,
+                builder: (context, child) {
+                  return FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: Padding(
+                        padding: EdgeInsets.all(isTablet ? 32 : 24),
+                        child: Container(
+                          constraints: BoxConstraints(
+                            maxWidth: isTablet ? 600 : double.infinity,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // Image Container dengan animasi
+                              Container(
+                                width: isTablet ? 180 : 150,
+                                height: isTablet ? 180 : 150,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  color: Colors.white,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.1),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 10),
+                                    ),
+                                  ],
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: Image.asset(
+                                    gambarMakanan[selectedTipe]!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Container(
+                                        color: Colors.grey.shade200,
+                                        child: const Icon(
+                                          Icons.restaurant,
+                                          size: 50,
+                                          color: Colors.grey,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ),
 
-            TextFormField(
-              readOnly: true,
-              controller: deskripsiController,
-              decoration: const InputDecoration(
-                labelText: 'Detail Paket',
-                border: UnderlineInputBorder(),
-                suffixIcon: Icon(Icons.info_outline),
-              ),
-            ),
-            const SizedBox(height: 16),
+                              const SizedBox(height: 32),
 
-            TextFormField(
-              readOnly: true,
-              controller: tanggalController,
-              onTap: () => _pilihTanggal(context),
-              decoration: const InputDecoration(
-                labelText: 'Tanggal',
-                border: UnderlineInputBorder(),
-                suffixIcon: Icon(Icons.calendar_today),
-              ),
-            ),
+                              // Form Card
+                              Container(
+                                padding: EdgeInsets.all(isTablet ? 32 : 24),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.1),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 10),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  children: [
+                                    // Dropdown Tipe Paket
+                                    DropdownButtonFormField<int>(
+                                      value: selectedTipe,
+                                      decoration: InputDecoration(
+                                        labelText: 'Tipe Paket',
+                                        prefixIcon: const Icon(
+                                          Icons.fastfood,
+                                          color: Color(0xFF018175),
+                                        ),
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          borderSide: BorderSide(
+                                            color: Colors.grey.shade300,
+                                          ),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          borderSide: const BorderSide(
+                                            color: Color(0xFF018175),
+                                            width: 2,
+                                          ),
+                                        ),
+                                        filled: true,
+                                        fillColor: Colors.grey.shade50,
+                                      ),
+                                      items: deskripsiMakanan.entries.map((e) {
+                                        return DropdownMenuItem(
+                                          value: e.key,
+                                          child: Text('Paket ${e.key}'),
+                                        );
+                                      }).toList(),
+                                      onChanged: (val) {
+                                        if (val != null) {
+                                          setState(() {
+                                            selectedTipe = val;
+                                            deskripsiController.text =
+                                                deskripsiMakanan[
+                                                        selectedTipe] ??
+                                                    '';
+                                          });
+                                        }
+                                      },
+                                    ),
 
-            Spacer(),
+                                    const SizedBox(height: 20),
 
-            // Tombol Simpan yang Diperbarui
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _isSaving
-                    ? null
-                    : () async {
-                        // Validasi
-                        if (_selectedDate == null) {
-                          // Validate using _selectedDate
-                          if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            // Check mounted before ScaffoldMessenger
-                            const SnackBar(
-                                content: Text('Tanggal harus diisi')),
-                          );
-                          return;
-                        }
+                                    // Detail Paket Field
+                                    TextFormField(
+                                      readOnly: true,
+                                      controller: deskripsiController,
+                                      maxLines: 2,
+                                      decoration: InputDecoration(
+                                        labelText: 'Detail Paket',
+                                        prefixIcon: const Icon(
+                                          Icons.description,
+                                          color: Color(0xFF018175),
+                                        ),
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          borderSide: BorderSide(
+                                            color: Colors.grey.shade300,
+                                          ),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          borderSide: const BorderSide(
+                                            color: Color(0xFF018175),
+                                            width: 2,
+                                          ),
+                                        ),
+                                        filled: true,
+                                        fillColor: Colors.grey.shade50,
+                                      ),
+                                    ),
 
-                        final user = FirebaseAuth.instance.currentUser;
-                        if (user == null) {
-                          if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text(
-                                    'Anda harus login untuk menyimpan data')),
-                          );
-                          return;
-                        }
+                                    const SizedBox(height: 20),
 
-                        if (mounted) {
-                          setState(() {
-                            _isSaving = true;
-                          });
-                        }
+                                    // Tanggal Field
+                                    TextFormField(
+                                      readOnly: true,
+                                      controller: tanggalController,
+                                      onTap: () => _pilihTanggal(context),
+                                      decoration: InputDecoration(
+                                        labelText: 'Tanggal Pengambilan',
+                                        hintText: 'Pilih tanggal',
+                                        prefixIcon: const Icon(
+                                          Icons.calendar_today,
+                                          color: Color(0xFF018175),
+                                        ),
+                                        suffixIcon: const Icon(
+                                          Icons.arrow_drop_down,
+                                          color: Color(0xFF018175),
+                                        ),
+                                        border: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          borderSide: BorderSide(
+                                            color: Colors.grey.shade300,
+                                          ),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(12),
+                                          borderSide: const BorderSide(
+                                            color: Color(0xFF018175),
+                                            width: 2,
+                                          ),
+                                        ),
+                                        filled: true,
+                                        fillColor: Colors.grey.shade50,
+                                      ),
+                                    ),
 
-                        // Simpan ke Firestore
-                        try {
-                          await FirebaseFirestore.instance
-                              .collection('riwayatAmbilMakanan')
-                              .add({
-                            'userId': user.uid,
-                            'tipeMakanan':
-                                selectedTipe, // Store the key (integer)
-                            'deskripsi': deskripsiMakanan[selectedTipe],
-                            'tanggal':
-                                _selectedDate, // Store the DateTime object directly
-                            'timestamp': FieldValue
-                                .serverTimestamp(), // Tambahkan timestamp
-                          });
+                                    const SizedBox(height: 32),
 
-                          if (!mounted) return;
-                          // Optionally clear fields after successful save
-                          // tanggalController.clear();
-                          // _selectedDate = null;
-                          // setState(() { selectedTipe = 1; deskripsiController.text = deskripsiMakanan[1] ?? ''; });
+                                    // Save Button
+                                    SizedBox(
+                                      width: double.infinity,
+                                      height: 50,
+                                      child: ElevatedButton(
+                                        onPressed:
+                                            _isSaving ? null : _simpanData,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              const Color(0xFF018175),
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          elevation: 3,
+                                        ),
+                                        child: _isSaving
+                                            ? const SizedBox(
+                                                width: 20,
+                                                height: 20,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                  color: Colors.white,
+                                                  strokeWidth: 2,
+                                                ),
+                                              )
+                                            : Text(
+                                                'Simpan Makanan',
+                                                style: TextStyle(
+                                                  fontSize: isTablet ? 18 : 16,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
 
-                          // Navigasi ke halaman sukses
-                          Navigator.pushNamed(
-                            context,
-                            '/makanan_ditambahkan',
-                            arguments: {
-                              'deskripsi': deskripsiMakanan[selectedTipe],
-                              'tanggal': tanggalController.text,
-                            },
-                          );
-                        } catch (e) {
-                          print('Error saving to Firestore: $e');
-                          if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text(
-                                    'Gagal menyimpan data: ${e.toString()}')), // Pesan error yang lebih spesifik
-                          );
-                        } finally {
-                          if (mounted) {
-                            setState(() {
-                              _isSaving = false;
-                            });
-                          }
-                        }
-                      },
-                style: ElevatedButton.styleFrom(
-                  textStyle: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 18),
-                ),
-                child: _isSaving
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                            color: Colors.white, strokeWidth: 2.0),
-                      )
-                    : const Text('Simpan'),
+                              SizedBox(height: screenSize.height * 0.02),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _simpanData() async {
+    // Validasi
+    if (_selectedDate == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tanggal harus diisi'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Anda harus login untuk menyimpan data'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        _isSaving = true;
+      });
+    }
+
+    // Simpan ke Firestore
+    try {
+      await FirebaseFirestore.instance.collection('riwayatAmbilMakanan').add({
+        'userId': user.uid,
+        'tipeMakanan': selectedTipe,
+        'deskripsi': deskripsiMakanan[selectedTipe],
+        'tanggal': _selectedDate,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      if (!mounted) return;
+
+      // Navigasi ke halaman sukses
+      Navigator.pushNamed(
+        context,
+        '/makanan_ditambahkan',
+        arguments: {
+          'deskripsi': deskripsiMakanan[selectedTipe],
+          'tanggal': tanggalController.text,
+        },
+      );
+    } catch (e) {
+      print('Error saving to Firestore: $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal menyimpan data: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSaving = false;
+        });
+      }
+    }
   }
 }

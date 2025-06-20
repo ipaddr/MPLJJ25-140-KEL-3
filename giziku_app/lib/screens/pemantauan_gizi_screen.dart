@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:giziku_app/utils/gizi_helpers.dart'; // Import helper baru
+import 'package:giziku_app/utils/gizi_helpers.dart';
 
 class PemantauanGiziScreen extends StatefulWidget {
   const PemantauanGiziScreen({super.key});
@@ -10,21 +10,50 @@ class PemantauanGiziScreen extends StatefulWidget {
   State<PemantauanGiziScreen> createState() => _PemantauanGiziScreenState();
 }
 
-class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
+class _PemantauanGiziScreenState extends State<PemantauanGiziScreen>
+    with TickerProviderStateMixin {
   final TextEditingController namaController = TextEditingController();
   final TextEditingController usiaController = TextEditingController();
   final TextEditingController beratController = TextEditingController();
   final TextEditingController tinggiController = TextEditingController();
-  bool _isLoading = false;
 
-  String statusGizi = 'Normal'; // Default
+  bool _isLoading = false;
+  bool _showResult = false;
+  double? _calculatedIMT;
+
+  String statusGizi = 'Normal';
   String rekomendasi = 'Makanan 4 Sehat 5 Sempurna';
   String _namaPengguna = "Pengguna";
+
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
 
   @override
   void initState() {
     super.initState();
     _loadDataPengguna();
+
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutBack,
+    ));
   }
 
   @override
@@ -33,6 +62,7 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
     usiaController.dispose();
     beratController.dispose();
     tinggiController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
@@ -54,16 +84,13 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
         usiaController.text.isEmpty ||
         beratController.text.isEmpty ||
         tinggiController.text.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Semua field harus diisi.')),
-        );
-      }
+      _showSnackBar('Semua field harus diisi.', Colors.orange);
       return;
     }
 
     setState(() {
       _isLoading = true;
+      _showResult = false;
     });
 
     try {
@@ -72,68 +99,140 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
       int usia = int.tryParse(usiaController.text) ?? 0;
 
       if (berat <= 0) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Berat badan harus lebih dari 0 kg.')),
-          );
-        }
+        _showSnackBar('Berat badan harus lebih dari 0 kg.', Colors.red);
         setState(() => _isLoading = false);
         return;
       }
 
       if (tinggiCm <= 0) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Tinggi badan harus lebih dari 0 cm.')),
-          );
-        }
+        _showSnackBar('Tinggi badan harus lebih dari 0 cm.', Colors.red);
         setState(() => _isLoading = false);
         return;
       }
+
       if (usia <= 0) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Usia harus lebih dari 0 tahun.')),
-          );
-        }
+        _showSnackBar('Usia harus lebih dari 0 tahun.', Colors.red);
         setState(() => _isLoading = false);
         return;
       }
 
       double tinggiM = tinggiCm / 100;
       double imt = berat / (tinggiM * tinggiM);
+      _calculatedIMT = imt;
 
       String newStatusGizi;
       String newRekomendasi;
 
       if (imt < 18.5) {
         newStatusGizi = 'Kurang';
-        newRekomendasi =
-            'Perbanyak konsumsi makanan tinggi kalori dan protein seperti daging, telur, alpukat, dan kacang-kacangan. Pastikan porsi makan lebih sering.';
+        newRekomendasi = '''
+📈 Rekomendasi untuk Gizi Kurang:
+
+🥛 Tingkatkan Asupan Kalori:
+• Susu full cream, keju, yogurt
+• Alpukat, kacang-kacangan, biji-bijian
+• Minyak zaitun untuk memasak
+
+🍗 Protein Berkualitas:
+• Daging sapi, ayam, ikan
+• Telur (2-3 butir per hari)
+• Tahu, tempe, kacang merah
+
+🍌 Camilan Sehat:
+• Pisang dengan selai kacang
+• Smoothie buah dengan susu
+• Roti gandum dengan keju
+
+⚡ Tips Tambahan:
+• Makan 5-6 kali sehari porsi kecil
+• Minum jus buah antar waktu makan
+• Konsultasi dengan ahli gizi
+        ''';
       } else if (imt >= 18.5 && imt <= 24.9) {
         newStatusGizi = 'Normal';
-        newRekomendasi =
-            'Pertahankan pola makan seimbang dengan variasi 4 sehat 5 sempurna. Cukupi kebutuhan sayur, buah, karbohidrat kompleks, protein, dan lemak baik.';
+        newRekomendasi = '''
+✅ Rekomendasi untuk Gizi Normal:
+
+🍽️ Pertahankan Pola Seimbang:
+• Nasi/roti gandum sebagai karbohidrat
+• Lauk protein (ikan, ayam, telur)
+• Sayuran hijau dan berwarna
+
+🥗 Menu Harian Seimbang:
+• Sarapan: Oatmeal + buah + susu
+• Makan siang: Nasi + sayur + protein
+• Makan malam: Porsi sedang seimbang
+
+🍎 Camilan Sehat:
+• Buah-buahan segar
+• Yogurt tanpa gula berlebih
+• Kacang-kacangan alami
+
+💧 Hidrasi & Aktivitas:
+• Minum air 8 gelas per hari
+• Olahraga ringan 30 menit/hari
+• Tidur cukup 7-8 jam
+        ''';
       } else if (imt >= 25 && imt <= 29.9) {
         newStatusGizi = 'Berlebih';
-        newRekomendasi =
-            'Kurangi porsi makan, batasi makanan tinggi lemak jenuh, gula, dan garam. Perbanyak konsumsi serat dari sayur dan buah, serta tingkatkan aktivitas fisik.';
+        newRekomendasi = '''
+⚖️ Rekomendasi untuk Gizi Berlebih:
+
+🥬 Kurangi Kalori Secara Sehat:
+• Perbanyak sayuran hijau dan serat
+• Protein rendah lemak (ikan, ayam tanpa kulit)
+• Karbohidrat kompleks (nasi merah, oat)
+
+🚫 Batasi Konsumsi:
+• Makanan tinggi gula dan lemak jenuh
+• Minuman manis dan bersoda
+• Gorengan dan makanan olahan
+
+🍽️ Pola Makan Teratur:
+• Makan 3x sehari porsi terkontrol
+• Camilan buah di antara jam makan
+• Hindari makan malam terlalu larut
+
+🏃 Tingkatkan Aktivitas:
+• Olahraga aerobik 45 menit, 4x seminggu
+• Jalan kaki setelah makan
+• Naik tangga daripada lift
+        ''';
       } else {
-        // IMT >= 30
         newStatusGizi = 'Obesitas';
-        newRekomendasi =
-            'Segera konsultasikan dengan ahli gizi atau dokter. Perlu perubahan gaya hidup signifikan meliputi diet rendah kalori, tinggi serat, dan peningkatan aktivitas fisik secara teratur.';
+        newRekomendasi = '''
+🚨 Rekomendasi untuk Obesitas:
+
+⚠️ Perlu Perhatian Khusus:
+• Konsultasi segera dengan dokter/ahli gizi
+• Program penurunan berat badan terstruktur
+• Pemantauan kesehatan rutin
+
+🥗 Diet Rendah Kalori Ketat:
+• Sayuran hijau sebagai makanan utama
+• Protein tanpa lemak (ikan putih, ayam rebus)
+• Hindari karbohidrat sederhana
+
+🚫 Pantangan Mutlak:
+• Fast food dan makanan olahan
+• Minuman manis dan beralkohol
+• Makanan tinggi lemak trans
+
+🏋️ Program Olahraga Intensif:
+• Cardio 60 menit, 5x seminggu
+• Latihan kekuatan 2x seminggu
+• Aktivitas harian yang aktif
+
+💊 Dukungan Medis:
+• Cek kesehatan berkala
+• Monitoring tekanan darah & gula darah
+• Pertimbangkan konsultasi psikolog
+        ''';
       }
 
       User? user = FirebaseAuth.instance.currentUser;
       if (user == null) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content: Text('Anda harus login untuk menyimpan data.')),
-          );
-        }
+        _showSnackBar('Anda harus login untuk menyimpan data.', Colors.red);
         setState(() => _isLoading = false);
         return;
       }
@@ -146,7 +245,7 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
         'tinggiBadan': tinggiCm,
         'imt': imt.isNaN || imt.isInfinite
             ? null
-            : double.parse(imt.toStringAsFixed(1)), // Ubah ke 1 angka desimal
+            : double.parse(imt.toStringAsFixed(1)),
         'statusGizi': newStatusGizi,
         'rekomendasi': newRekomendasi,
         'tanggalPengecekan': FieldValue.serverTimestamp(),
@@ -160,24 +259,17 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
         setState(() {
           statusGizi = newStatusGizi;
           rekomendasi = newRekomendasi;
+          _showResult = true;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Status gizi berhasil dihitung dan disimpan.')),
-        );
-        // Pertimbangkan untuk membersihkan field setelah berhasil atau navigasi
-        // namaController.clear();
-        // usiaController.clear();
-        // beratController.clear();
-        // tinggiController.clear();
+
+        _animationController.forward();
+        _showSnackBar(
+            'Status gizi berhasil dihitung dan disimpan.', Colors.green);
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Terjadi kesalahan: ${e.toString()}')),
-        );
+        _showSnackBar('Terjadi kesalahan: ${e.toString()}', Colors.red);
       }
-      print('Error in hitungStatusGizi: $e');
     } finally {
       if (mounted) {
         setState(() {
@@ -187,269 +279,566 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
     }
   }
 
-  // Fungsi helper _getEmoticonForStatus dan _getColorForStatus sudah dipindahkan ke gizi_helpers.dart
-  // Namun, jika Anda ingin warna yang berbeda khusus untuk halaman ini, Anda bisa mendefinisikannya di sini
-  // atau memodifikasi gizi_helpers.dart untuk menerima parameter tema/konteks yang berbeda.
-  // Untuk saat ini, kita akan menggunakan yang dari gizi_helpers.dart.
+  void _showSnackBar(String message, Color color) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: color,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+    }
+  }
+
+  void _resetForm() {
+    setState(() {
+      _showResult = false;
+      _calculatedIMT = null;
+    });
+    _animationController.reset();
+    namaController.clear();
+    usiaController.clear();
+    beratController.clear();
+    tinggiController.clear();
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Menggunakan warna dari gizi_helpers.dart, namun jika ingin spesifik untuk halaman ini:
-    Color colorKurang = const Color.fromARGB(255, 235, 220, 52); // Kuning
-    Color colorNormal = const Color.fromARGB(255, 76, 175, 80); // Hijau
-    Color colorBerlebih = const Color.fromARGB(255, 255, 82, 82); // Merah
-    Color colorObesitas = const Color.fromARGB(255, 180, 50, 50); // Merah Tua
-
     return Scaffold(
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(color: Color(0xFF016BB8)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  const Text(
-                    'Giziku App',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    'Halo, $_namaPengguna',
-                    style: const TextStyle(color: Colors.white70, fontSize: 16),
-                  ),
-                  const SizedBox(height: 8),
-                ],
-              ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.person_outline),
-              title: const Text('Profil'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/profile');
-              },
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.monitor_heart),
-              title: const Text('Pemantauan Gizi'),
-              tileColor: Theme.of(context)
-                  .colorScheme
-                  .primary
-                  .withOpacity(0.1), // Menandai halaman aktif
-              onTap: () {
-                Navigator.pop(context);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.volunteer_activism),
-              title: const Text('Riwayat Ambil Makanan'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/riwayat_ambil_makanan');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.school),
-              title: const Text('Edukasi'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/edukasi');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.bar_chart),
-              title: const Text('Dashboard Statistik'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/dashboard');
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.history),
-              title: const Text('Riwayat Cek Gizi'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/riwayat_cek_gizi');
-              },
-            ),
-          ],
-        ),
-      ),
+      backgroundColor: const Color(0xFF10b68d),
       appBar: AppBar(
-        title: const Text('Pemantauan Gizi'),
-        // Leading button (menu atau back) akan otomatis ditangani oleh Flutter
-        // berdasarkan keberadaan Drawer.
+        elevation: 0,
+        backgroundColor: const Color(0xFF018175),
+        title: const Text(
+          'Pemantauan Gizi',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        centerTitle: true,
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, color: Colors.white),
+            onPressed: () => Scaffold.of(context).openDrawer(),
+          ),
+        ),
+        actions: [
+          if (_showResult)
+            IconButton(
+              icon: const Icon(Icons.refresh, color: Colors.white),
+              onPressed: _resetForm,
+              tooltip: 'Reset Form',
+            ),
+        ],
       ),
+      drawer: _buildModernDrawer(),
       body: SingleChildScrollView(
-        // Menggunakan SingleChildScrollView untuk menghindari overflow
-        padding: const EdgeInsets.all(16.0),
+        physics: const BouncingScrollPhysics(),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch, // Agar tombol melebar
           children: [
-            _buildTextField(
-                controller: namaController, label: 'Nama Lengkap Anak'),
-            _buildTextField(
-                controller: usiaController,
-                label: 'Usia (Tahun)',
-                keyboardType: TextInputType.number),
-            _buildTextField(
-                controller: beratController,
-                label: 'Berat Badan (Kg)',
-                keyboardType: TextInputType.number),
-            _buildTextField(
-                controller: tinggiController,
-                label: 'Tinggi Badan (Cm)',
-                keyboardType: TextInputType.number),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                textStyle: const TextStyle(fontSize: 16),
-              ),
-              onPressed: _isLoading ? null : hitungStatusGizi,
-              child: _isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2.0,
-                      ),
-                    )
-                  : const Text('Hitung & Simpan Status Gizi'),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Hasil Status Gizi:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Icon(
-              getEmoticonForStatus(statusGizi), // Menggunakan helper
-              size: 70,
-              color:
-                  getColorForStatus(statusGizi, context), // Menggunakan helper
-            ),
-            const SizedBox(height: 8),
-            Text(
-              statusGizi,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: getColorForStatus(
-                    statusGizi, context), // Menggunakan helper
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  DotWithText(text: 'Kurang', color: colorKurang),
-                  DotWithText(text: 'Normal', color: colorNormal),
-                  DotWithText(text: 'Berlebih', color: colorBerlebih),
-                  DotWithText(text: 'Obesitas', color: colorObesitas),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Rekomendasi Makanan:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
+            // Header Section with gradient
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .surfaceVariant
-                      .withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .outline
-                          .withOpacity(0.5))),
-              child: Text(
-                rekomendasi,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 15),
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Color(0xFF018175),
+                    Color(0xFF10b68d),
+                  ],
+                ),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(50),
+                      ),
+                      child: const Icon(
+                        Icons.health_and_safety,
+                        size: 48,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Cek Status Gizi Anak',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Halo $_namaPengguna, mari pantau kesehatan si kecil',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        color: Colors.white70,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
             ),
-            const SizedBox(height: 24), // Spasi tambahan di akhir
+
+            // Form Section
+            Container(
+              margin: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Data Anak',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF018175),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    _buildModernTextField(
+                      controller: namaController,
+                      label: 'Nama Lengkap Anak',
+                      icon: Icons.person_outline,
+                    ),
+
+                    _buildModernTextField(
+                      controller: usiaController,
+                      label: 'Usia (Tahun)',
+                      icon: Icons.cake_outlined,
+                      keyboardType: TextInputType.number,
+                    ),
+
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildModernTextField(
+                            controller: beratController,
+                            label: 'Berat (Kg)',
+                            icon: Icons.monitor_weight_outlined,
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: _buildModernTextField(
+                            controller: tinggiController,
+                            label: 'Tinggi (Cm)',
+                            icon: Icons.height_outlined,
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Calculate Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : hitungStatusGizi,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF018175),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 3,
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.calculate, color: Colors.white),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Hitung & Simpan Status Gizi',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            // Result Section
+            if (_showResult) ...[
+              SlideTransition(
+                position: _slideAnimation,
+                child: FadeTransition(
+                  opacity: _fadeAnimation,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          getColorForStatus(statusGizi, context)
+                              .withOpacity(0.1),
+                          getColorForStatus(statusGizi, context)
+                              .withOpacity(0.05),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: getColorForStatus(statusGizi, context)
+                            .withOpacity(0.3),
+                        width: 2,
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(24.0),
+                      child: Column(
+                        children: [
+                          // Status Result
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: getColorForStatus(statusGizi, context)
+                                      .withOpacity(0.2),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              children: [
+                                const Text(
+                                  'Hasil Status Gizi',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF018175),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Status Icon and Text
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        getColorForStatus(statusGizi, context)
+                                            .withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(50),
+                                  ),
+                                  child: Icon(
+                                    getEmoticonForStatus(statusGizi),
+                                    size: 64,
+                                    color:
+                                        getColorForStatus(statusGizi, context),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+
+                                Text(
+                                  statusGizi,
+                                  style: TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                    color:
+                                        getColorForStatus(statusGizi, context),
+                                  ),
+                                ),
+
+                                if (_calculatedIMT != null) ...[
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 16, vertical: 8),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[100],
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: Text(
+                                      'IMT: ${_calculatedIMT!.toStringAsFixed(1)} kg/m²',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color: Colors.black87,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Status Legend
+                          _buildStatusLegend(),
+
+                          const SizedBox(height: 20),
+
+                          // Recommendation
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(16),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Row(
+                                  children: [
+                                    Icon(
+                                      Icons.lightbulb_outline,
+                                      color: Color(0xFF018175),
+                                      size: 24,
+                                    ),
+                                    SizedBox(width: 8),
+                                    Text(
+                                      'Rekomendasi Makanan',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF018175),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  rekomendasi,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    height: 1.5,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+            ],
+
+            const SizedBox(height: 20),
           ],
         ),
       ),
-      bottomNavigationBar: BottomAppBar(
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 6.0,
-        color: Colors.white, // Atau Theme.of(context).bottomAppBarTheme.color
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildBottomNavItem(
-              icon: Icons.arrow_back_ios_new_rounded,
-              label: 'Back',
-              onPressed: () {
-                if (Navigator.canPop(context)) {
-                  Navigator.pop(context);
-                }
-              },
-            ),
-            _buildBottomNavItem(
-              icon: Icons.home,
-              label: 'Home',
-              isCentral: true,
-              onPressed: () {
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
-                  '/home',
-                  (route) => false,
-                );
-              },
-            ),
-            _buildBottomNavItem(
-              icon: Icons.add_circle_outline,
-              label: 'Tambah',
-              onPressed: () {
-                Navigator.of(context).pushNamed('/tambahmakanan');
-              },
-            ),
-          ],
+      bottomNavigationBar: _buildBottomNavigationBar(),
+    );
+  }
+
+  Widget _buildModernTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16.0),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        style: const TextStyle(fontSize: 16),
+        decoration: InputDecoration(
+          labelText: label,
+          prefixIcon: Icon(icon, color: const Color(0xFF018175)),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF018175), width: 2),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey[300]!),
+          ),
+          filled: true,
+          fillColor: Colors.grey[50],
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),
     );
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextField(
-        controller: controller,
-        keyboardType: keyboardType,
-        decoration: InputDecoration(
-          labelText: label,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+  Widget _buildStatusLegend() {
+    final statusItems = [
+      {'text': 'Kurang', 'color': const Color.fromARGB(255, 235, 220, 52)},
+      {'text': 'Normal', 'color': const Color.fromARGB(255, 76, 175, 80)},
+      {'text': 'Berlebih', 'color': const Color.fromARGB(255, 255, 82, 82)},
+      {'text': 'Obesitas', 'color': const Color.fromARGB(255, 180, 50, 50)},
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
           ),
-          filled: true,
-          fillColor: Colors.white.withOpacity(0.9),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Kategori Status Gizi',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF018175),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 8,
+            children: statusItems
+                .map((item) => Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: (item['color'] as Color).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: (item['color'] as Color).withOpacity(0.3),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: item['color'] as Color,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            item['text'] as String,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ))
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBottomNavigationBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildBottomNavItem(
+                icon: Icons.arrow_back_ios_new_rounded,
+                label: 'Back',
+                onPressed: () {
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context);
+                  }
+                },
+              ),
+              _buildBottomNavItem(
+                icon: Icons.home,
+                label: 'Home',
+                onPressed: () {
+                  Navigator.pushReplacementNamed(context, '/home');
+                },
+              ),
+              _buildBottomNavItem(
+                icon: Icons.add_circle_outline,
+                label: 'Tambah',
+                onPressed: () {
+                  Navigator.of(context).pushNamed('/tambahmakanan');
+                },
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -461,58 +850,138 @@ class _PemantauanGiziScreenState extends State<PemantauanGiziScreen> {
     required VoidCallback onPressed,
     bool isCentral = false,
   }) {
-    final color = isCentral ? Colors.white : const Color(0xFF018175);
-    final iconColor = isCentral ? Colors.white : const Color(0xFF018175);
-    final backgroundColor =
-        isCentral ? const Color(0xFF018175) : Colors.transparent;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        if (isCentral)
-          Container(
-            padding: const EdgeInsets.all(4), // Padding untuk lingkaran FAB
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: backgroundColor,
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        decoration: BoxDecoration(
+          color: isCentral ? const Color(0xFF018175) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: isCentral ? Colors.white : const Color(0xFF018175),
+              size: isCentral ? 28 : 24,
             ),
-            child: IconButton(
-              icon: Icon(icon, color: iconColor),
-              iconSize: 30,
-              onPressed: onPressed,
-            ),
-          )
-        else
-          IconButton(
-            icon: Icon(icon, color: iconColor),
-            onPressed: onPressed,
-          ),
-        if (!isCentral) // Hanya tampilkan teks jika bukan tombol tengah
-          Text(
-            label,
-            style: TextStyle(fontSize: 12, color: color),
-          ),
-      ],
+            if (!isCentral) ...[
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Color(0xFF018175),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
-}
 
-class DotWithText extends StatelessWidget {
-  final String text;
-  final Color color;
+  Widget _buildModernDrawer() {
+    return Drawer(
+      child: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF016BB8),
+              Color(0xFF018175),
+            ],
+          ),
+        ),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: const BoxDecoration(color: Colors.transparent),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  const CircleAvatar(
+                    radius: 30,
+                    backgroundColor: Colors.white,
+                    child: Icon(
+                      Icons.person,
+                      size: 36,
+                      color: Color(0xFF018175),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'Giziku App',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'Halo, $_namaPengguna',
+                    style: const TextStyle(color: Colors.white70, fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+            _buildDrawerItem(Icons.person_outline, 'Profil', () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/profile');
+            }),
+            const Divider(color: Colors.white24),
+            _buildDrawerItem(
+              Icons.monitor_heart,
+              'Pemantauan Gizi',
+              () => Navigator.pop(context),
+              isActive: true,
+            ),
+            _buildDrawerItem(Icons.volunteer_activism, 'Riwayat Ambil Makanan',
+                () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/riwayat_ambil_makanan');
+            }),
+            _buildDrawerItem(Icons.school, 'Edukasi', () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/edukasi');
+            }),
+            _buildDrawerItem(Icons.bar_chart, 'Dashboard Statistik', () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/dashboard');
+            }),
+            _buildDrawerItem(Icons.history, 'Riwayat Cek Gizi', () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/riwayat_cek_gizi');
+            }),
+          ],
+        ),
+      ),
+    );
+  }
 
-  const DotWithText({super.key, required this.text, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      // Mengubah menjadi Column agar lebih rapi jika teks panjang
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(Icons.circle, color: color, size: 12),
-        const SizedBox(height: 2), // Sedikit jarak antara dot dan teks
-        Text(text, style: const TextStyle(fontSize: 11)),
-      ],
+  Widget _buildDrawerItem(IconData icon, String title, VoidCallback onTap,
+      {bool isActive = false}) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: isActive ? Colors.white.withOpacity(0.2) : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ListTile(
+        leading: Icon(icon, color: Colors.white),
+        title: Text(
+          title,
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+        onTap: onTap,
+      ),
     );
   }
 }

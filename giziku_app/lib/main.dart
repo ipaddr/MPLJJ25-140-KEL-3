@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:giziku_app/screens/artikel_lengkap_screen.dart';
 import 'package:giziku_app/screens/profil_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -6,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 //User screens
 import 'firebase_options.dart';
+import 'screens/detail_artikel_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';
@@ -23,6 +25,10 @@ import 'screens/dashboard_statistik_screen.dart';
 import 'screens/admin_home_screen.dart';
 import 'screens/admin_dashboard_makanan_screen.dart';
 import 'screens/admin_kelola_edukasi_screen.dart';
+import 'screens/admin_login_screen.dart';
+import 'screens/admin_register_screen.dart';
+import 'screens/admin_tambah_edukasi_page.dart';
+import 'screens/admin_edit_edukasi_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -88,14 +94,57 @@ class MyApp extends StatelessWidget {
             const RiwayatAmbilMakananScreen(),
         '/riwayat_cek_gizi': (context) => const RiwayatCekGiziScreen(),
         '/edukasi': (context) => EdukasiScreen(),
+        '/artikel_lengkap': (context) => const ArtikelLengkapScreen(),
         '/dashboard': (context) => const StatistikBadanChart(),
         '/profile': (context) => const ProfileScreen(),
 
         // Admin routes
+        '/admin_login': (context) => const AdminLoginScreen(),
+        '/admin_register': (context) => const AdminRegisterScreen(),
         '/admin_home': (context) => const AdminHomeScreen(),
         '/admin_dashboard_makanan': (context) =>
             const AdminDashboardMakananScreen(),
         '/admin_kelola_edukasi': (context) => const AdminKelolaEdukasiScreen(),
+        '/admin_tambah_edukasi': (context) => const AdminTambahEdukasiScreen(),
+      },
+      // Handle dynamic routes dengan arguments
+      // Handle dynamic routes dengan arguments
+      onGenerateRoute: (settings) {
+        switch (settings.name) {
+          case '/artikel_lengkap':
+            final args = settings.arguments as List<dynamic>?;
+            if (args != null) {
+              return MaterialPageRoute(
+                builder: (context) => ArtikelLengkapScreen(),
+              );
+            }
+            break;
+
+          case '/admin_edit_edukasi':
+            final args = settings.arguments as Map<String, dynamic>?;
+            if (args != null) {
+              return MaterialPageRoute(
+                builder: (context) => AdminEditEdukasiScreen(
+                  edukasiId: args['edukasiId'],
+                  edukasiData: args['edukasiData'],
+                ),
+              );
+            }
+            break;
+
+          case '/detail_artikel':
+            final args = settings.arguments as Map<String, dynamic>?;
+            if (args != null) {
+              return MaterialPageRoute(
+                builder: (context) => DetailArtikelScreen(
+                  edukasiId: args['edukasiId'],
+                  edukasiData: args['edukasiData'],
+                ),
+              );
+            }
+            break;
+        }
+        return null;
       },
       onUnknownRoute: (settings) {
         return MaterialPageRoute(
