@@ -18,7 +18,7 @@ class AdminEditEdukasiScreen extends StatefulWidget {
 class _AdminEditEdukasiScreenState extends State<AdminEditEdukasiScreen>
     with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  
+
   // Controllers
   late TextEditingController _judulController;
   late TextEditingController _deskripsiController;
@@ -26,10 +26,10 @@ class _AdminEditEdukasiScreenState extends State<AdminEditEdukasiScreen>
   late TextEditingController _authorController;
   late TextEditingController _thumbnailController;
   late TextEditingController _videoUrlController;
-  
+
   String _selectedType = 'artikel'; // artikel atau video
   bool _isLoading = false;
-  
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -42,12 +42,18 @@ class _AdminEditEdukasiScreenState extends State<AdminEditEdukasiScreen>
   }
 
   void _initializeControllers() {
-    _judulController = TextEditingController(text: widget.edukasiData['judul'] ?? '');
-    _deskripsiController = TextEditingController(text: widget.edukasiData['deskripsi'] ?? '');
-    _kontenController = TextEditingController(text: widget.edukasiData['konten'] ?? '');
-    _authorController = TextEditingController(text: widget.edukasiData['author'] ?? '');
-    _thumbnailController = TextEditingController(text: widget.edukasiData['thumbnail'] ?? '');
-    _videoUrlController = TextEditingController(text: widget.edukasiData['videoUrl'] ?? '');
+    _judulController =
+        TextEditingController(text: widget.edukasiData['judul'] ?? '');
+    _deskripsiController =
+        TextEditingController(text: widget.edukasiData['deskripsi'] ?? '');
+    _kontenController =
+        TextEditingController(text: widget.edukasiData['konten'] ?? '');
+    _authorController =
+        TextEditingController(text: widget.edukasiData['author'] ?? '');
+    _thumbnailController =
+        TextEditingController(text: widget.edukasiData['thumbnail'] ?? '');
+    _videoUrlController =
+        TextEditingController(text: widget.edukasiData['videoUrl'] ?? '');
     _selectedType = widget.edukasiData['type'] ?? 'artikel';
   }
 
@@ -180,7 +186,8 @@ class _AdminEditEdukasiScreenState extends State<AdminEditEdukasiScreen>
               pinned: true,
               backgroundColor: Colors.transparent,
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                icon:
+                    const Icon(Icons.arrow_back, color: Colors.white, size: 28),
                 onPressed: () => Navigator.pop(context),
               ),
               actions: [
@@ -256,7 +263,8 @@ class _AdminEditEdukasiScreenState extends State<AdminEditEdukasiScreen>
                                 child: Form(
                                   key: _formKey,
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       // Header
                                       Row(
@@ -264,8 +272,10 @@ class _AdminEditEdukasiScreenState extends State<AdminEditEdukasiScreen>
                                           Container(
                                             padding: const EdgeInsets.all(12),
                                             decoration: BoxDecoration(
-                                              color: const Color(0xFF2E7D32).withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(12),
+                                              color: const Color(0xFF2E7D32)
+                                                  .withOpacity(0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                             ),
                                             child: const Icon(
                                               Icons.edit,
@@ -276,7 +286,8 @@ class _AdminEditEdukasiScreenState extends State<AdminEditEdukasiScreen>
                                           const SizedBox(width: 16),
                                           const Expanded(
                                             child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
                                                 Text(
                                                   'Edit Konten Edukasi',
@@ -311,7 +322,7 @@ class _AdminEditEdukasiScreenState extends State<AdminEditEdukasiScreen>
                                         ),
                                       ),
                                       const SizedBox(height: 12),
-                                      
+
                                       Row(
                                         children: [
                                           Expanded(
@@ -319,7 +330,8 @@ class _AdminEditEdukasiScreenState extends State<AdminEditEdukasiScreen>
                                               title: const Text('Artikel'),
                                               value: 'artikel',
                                               groupValue: _selectedType,
-                                              activeColor: const Color(0xFF2E7D32),
+                                              activeColor:
+                                                  const Color(0xFF2E7D32),
                                               onChanged: (value) {
                                                 setState(() {
                                                   _selectedType = value!;
@@ -332,7 +344,8 @@ class _AdminEditEdukasiScreenState extends State<AdminEditEdukasiScreen>
                                               title: const Text('Video'),
                                               value: 'video',
                                               groupValue: _selectedType,
-                                              activeColor: const Color(0xFF2E7D32),
+                                              activeColor:
+                                                  const Color(0xFF2E7D32),
                                               onChanged: (value) {
                                                 setState(() {
                                                   _selectedType = value!;
@@ -356,13 +369,15 @@ class _AdminEditEdukasiScreenState extends State<AdminEditEdukasiScreen>
                                             color: Color(0xFF2E7D32),
                                           ),
                                           border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
                                             borderSide: BorderSide(
                                               color: Colors.grey.shade300,
                                             ),
                                           ),
                                           focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
                                             borderSide: const BorderSide(
                                               color: Color(0xFF2E7D32),
                                               width: 2,
@@ -387,19 +402,22 @@ class _AdminEditEdukasiScreenState extends State<AdminEditEdukasiScreen>
                                         maxLines: 3,
                                         decoration: InputDecoration(
                                           labelText: 'Deskripsi *',
-                                          hintText: 'Masukkan deskripsi singkat',
+                                          hintText:
+                                              'Masukkan deskripsi singkat',
                                           prefixIcon: const Icon(
                                             Icons.description,
                                             color: Color(0xFF2E7D32),
                                           ),
                                           border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
                                             borderSide: BorderSide(
                                               color: Colors.grey.shade300,
                                             ),
                                           ),
                                           focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
                                             borderSide: const BorderSide(
                                               color: Color(0xFF2E7D32),
                                               width: 2,
@@ -429,13 +447,15 @@ class _AdminEditEdukasiScreenState extends State<AdminEditEdukasiScreen>
                                             color: Color(0xFF2E7D32),
                                           ),
                                           border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
                                             borderSide: BorderSide(
                                               color: Colors.grey.shade300,
                                             ),
                                           ),
                                           focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
                                             borderSide: const BorderSide(
                                               color: Color(0xFF2E7D32),
                                               width: 2,
@@ -459,19 +479,22 @@ class _AdminEditEdukasiScreenState extends State<AdminEditEdukasiScreen>
                                         controller: _thumbnailController,
                                         decoration: InputDecoration(
                                           labelText: 'URL Thumbnail',
-                                          hintText: 'Masukkan URL gambar thumbnail',
+                                          hintText:
+                                              'Masukkan URL gambar thumbnail',
                                           prefixIcon: const Icon(
                                             Icons.image,
                                             color: Color(0xFF2E7D32),
                                           ),
                                           border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
                                             borderSide: BorderSide(
                                               color: Colors.grey.shade300,
                                             ),
                                           ),
                                           focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
                                             borderSide: const BorderSide(
                                               color: Color(0xFF2E7D32),
                                               width: 2,
@@ -490,19 +513,22 @@ class _AdminEditEdukasiScreenState extends State<AdminEditEdukasiScreen>
                                           controller: _videoUrlController,
                                           decoration: InputDecoration(
                                             labelText: 'URL Video *',
-                                            hintText: 'Masukkan URL video YouTube/lainnya',
+                                            hintText:
+                                                'Masukkan URL video YouTube/lainnya',
                                             prefixIcon: const Icon(
                                               Icons.video_library,
                                               color: Color(0xFF2E7D32),
                                             ),
                                             border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                               borderSide: BorderSide(
                                                 color: Colors.grey.shade300,
                                               ),
                                             ),
                                             focusedBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                               borderSide: const BorderSide(
                                                 color: Color(0xFF2E7D32),
                                                 width: 2,
@@ -512,8 +538,9 @@ class _AdminEditEdukasiScreenState extends State<AdminEditEdukasiScreen>
                                             fillColor: Colors.grey.shade50,
                                           ),
                                           validator: (value) {
-                                            if (_selectedType == 'video' && 
-                                                (value == null || value.isEmpty)) {
+                                            if (_selectedType == 'video' &&
+                                                (value == null ||
+                                                    value.isEmpty)) {
                                               return 'URL video wajib diisi untuk tipe video';
                                             }
                                             return null;
@@ -528,7 +555,7 @@ class _AdminEditEdukasiScreenState extends State<AdminEditEdukasiScreen>
                                         maxLines: 8,
                                         decoration: InputDecoration(
                                           labelText: 'Konten *',
-                                          hintText: _selectedType == 'artikel' 
+                                          hintText: _selectedType == 'artikel'
                                               ? 'Masukkan isi artikel lengkap'
                                               : 'Masukkan deskripsi video',
                                           prefixIcon: const Icon(
@@ -536,13 +563,15 @@ class _AdminEditEdukasiScreenState extends State<AdminEditEdukasiScreen>
                                             color: Color(0xFF2E7D32),
                                           ),
                                           border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
                                             borderSide: BorderSide(
                                               color: Colors.grey.shade300,
                                             ),
                                           ),
                                           focusedBorder: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
                                             borderSide: const BorderSide(
                                               color: Color(0xFF2E7D32),
                                               width: 2,
@@ -566,13 +595,20 @@ class _AdminEditEdukasiScreenState extends State<AdminEditEdukasiScreen>
                                         children: [
                                           Expanded(
                                             child: OutlinedButton(
-                                              onPressed: _isLoading ? null : () => Navigator.pop(context),
+                                              onPressed: _isLoading
+                                                  ? null
+                                                  : () =>
+                                                      Navigator.pop(context),
                                               style: OutlinedButton.styleFrom(
-                                                side: const BorderSide(color: Color(0xFF2E7D32)),
+                                                side: const BorderSide(
+                                                    color: Color(0xFF2E7D32)),
                                                 shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(12),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
                                                 ),
-                                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 16),
                                               ),
                                               child: const Text(
                                                 'Batal',
@@ -586,21 +622,28 @@ class _AdminEditEdukasiScreenState extends State<AdminEditEdukasiScreen>
                                           const SizedBox(width: 16),
                                           Expanded(
                                             child: ElevatedButton(
-                                              onPressed: _isLoading ? null : _updateEdukasi,
+                                              onPressed: _isLoading
+                                                  ? null
+                                                  : _updateEdukasi,
                                               style: ElevatedButton.styleFrom(
-                                                backgroundColor: const Color(0xFF2E7D32),
+                                                backgroundColor:
+                                                    const Color(0xFF2E7D32),
                                                 foregroundColor: Colors.white,
                                                 shape: RoundedRectangleBorder(
-                                                  borderRadius: BorderRadius.circular(12),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
                                                 ),
-                                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                        vertical: 16),
                                                 elevation: 3,
                                               ),
                                               child: _isLoading
                                                   ? const SizedBox(
                                                       width: 20,
                                                       height: 20,
-                                                      child: CircularProgressIndicator(
+                                                      child:
+                                                          CircularProgressIndicator(
                                                         color: Colors.white,
                                                         strokeWidth: 2,
                                                       ),
@@ -608,7 +651,8 @@ class _AdminEditEdukasiScreenState extends State<AdminEditEdukasiScreen>
                                                   : const Text(
                                                       'Simpan Perubahan',
                                                       style: TextStyle(
-                                                        fontWeight: FontWeight.bold,
+                                                        fontWeight:
+                                                            FontWeight.bold,
                                                       ),
                                                     ),
                                             ),
@@ -628,7 +672,8 @@ class _AdminEditEdukasiScreenState extends State<AdminEditEdukasiScreen>
                                 decoration: BoxDecoration(
                                   color: Colors.blue.shade50,
                                   borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.blue.shade200),
+                                  border:
+                                      Border.all(color: Colors.blue.shade200),
                                 ),
                                 child: Row(
                                   children: [

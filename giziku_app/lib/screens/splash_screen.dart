@@ -13,7 +13,7 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _logoController;
   late AnimationController _textController;
   late AnimationController _rippleController;
-  
+
   late Animation<double> _logoScaleAnimation;
   late Animation<double> _logoOpacityAnimation;
   late Animation<double> _textOpacityAnimation;
@@ -90,10 +90,10 @@ class _SplashScreenState extends State<SplashScreen>
   void _startAnimations() async {
     // Start ripple animation immediately
     _rippleController.repeat();
-    
+
     // Start logo animation
     await _logoController.forward();
-    
+
     // Start text animation after logo
     _textController.forward();
   }
@@ -151,7 +151,7 @@ class _SplashScreenState extends State<SplashScreen>
                               ),
                             ),
                           ),
-                        
+
                         // Logo Container with Shadow
                         AnimatedBuilder(
                           animation: _logoController,
@@ -248,7 +248,8 @@ class _SplashScreenState extends State<SplashScreen>
                             width: isTablet ? 30 : 24,
                             height: isTablet ? 30 : 24,
                             child: const CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.white),
                               strokeWidth: 3,
                             ),
                           ),

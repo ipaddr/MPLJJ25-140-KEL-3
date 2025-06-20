@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:giziku_app/screens/artikel_lengkap_screen.dart';
 import 'package:giziku_app/screens/detail_artikel_screen.dart';
 
 class EdukasiScreen extends StatefulWidget {

@@ -143,7 +143,8 @@ class _RiwayatAmbilMakananScreenState extends State<RiwayatAmbilMakananScreen> {
                           ),
                           const SizedBox(height: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.2),
                               borderRadius: BorderRadius.circular(20),
@@ -176,12 +177,14 @@ class _RiwayatAmbilMakananScreenState extends State<RiwayatAmbilMakananScreen> {
                             ? FirebaseFirestore.instance
                                 .collection('riwayatAmbilMakanan')
                                 .where('userId',
-                                    isEqualTo: FirebaseAuth.instance.currentUser!.uid)
+                                    isEqualTo:
+                                        FirebaseAuth.instance.currentUser!.uid)
                                 .orderBy('tanggal', descending: true)
                                 .snapshots()
                             : const Stream.empty(),
                         builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
                             return _buildLoadingState();
                           }
 
@@ -189,7 +192,8 @@ class _RiwayatAmbilMakananScreenState extends State<RiwayatAmbilMakananScreen> {
                             return _buildErrorState(snapshot.error.toString());
                           }
 
-                          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                          if (!snapshot.hasData ||
+                              snapshot.data!.docs.isEmpty) {
                             return _buildEmptyState();
                           }
 
@@ -201,7 +205,7 @@ class _RiwayatAmbilMakananScreenState extends State<RiwayatAmbilMakananScreen> {
                               // Summary Statistics
                               _buildSummaryCard(docs),
                               const SizedBox(height: 24),
-                              
+
                               // History Title
                               const Text(
                                 'Riwayat Makanan 🍽️',
@@ -218,14 +222,16 @@ class _RiwayatAmbilMakananScreenState extends State<RiwayatAmbilMakananScreen> {
                                 shrinkWrap: true,
                                 physics: const NeverScrollableScrollPhysics(),
                                 itemCount: docs.length,
-                                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                                gridDelegate:
+                                    SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: isTablet ? 2 : 1,
                                   mainAxisSpacing: 12,
                                   crossAxisSpacing: 12,
                                   childAspectRatio: isTablet ? 2.5 : 3.5,
                                 ),
                                 itemBuilder: (context, index) {
-                                  final data = docs[index].data() as Map<String, dynamic>;
+                                  final data = docs[index].data()
+                                      as Map<String, dynamic>;
                                   return _buildMakananCard(data);
                                 },
                               ),
@@ -246,7 +252,7 @@ class _RiwayatAmbilMakananScreenState extends State<RiwayatAmbilMakananScreen> {
   Widget _buildSummaryCard(List<QueryDocumentSnapshot> docs) {
     final totalMakanan = docs.length;
     final tipeMakananCount = <String, int>{};
-    
+
     for (var doc in docs) {
       final data = doc.data() as Map<String, dynamic>;
       final tipe = data['tipeMakanan']?.toString() ?? 'Lainnya';
@@ -321,7 +327,8 @@ class _RiwayatAmbilMakananScreenState extends State<RiwayatAmbilMakananScreen> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color) {
+  Widget _buildStatCard(
+      String title, String value, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -430,7 +437,8 @@ class _RiwayatAmbilMakananScreenState extends State<RiwayatAmbilMakananScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: Colors.green.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -446,7 +454,7 @@ class _RiwayatAmbilMakananScreenState extends State<RiwayatAmbilMakananScreen> {
                 ),
               ],
             ),
-            
+
             if (data['deskripsi'] != null) ...[
               const SizedBox(height: 12),
               Container(
@@ -749,7 +757,8 @@ class _RiwayatAmbilMakananScreenState extends State<RiwayatAmbilMakananScreen> {
               Navigator.pop(context);
               Navigator.pushNamed(context, '/pemantauan_gizi');
             }),
-            _buildDrawerItem(Icons.volunteer_activism, 'Riwayat Ambil Makanan', () {
+            _buildDrawerItem(Icons.volunteer_activism, 'Riwayat Ambil Makanan',
+                () {
               Navigator.pop(context);
             }, isActive: true),
             _buildDrawerItem(Icons.school, 'Edukasi', () {
@@ -770,7 +779,8 @@ class _RiwayatAmbilMakananScreenState extends State<RiwayatAmbilMakananScreen> {
     );
   }
 
-  Widget _buildDrawerItem(IconData icon, String title, VoidCallback onTap, {bool isActive = false}) {
+  Widget _buildDrawerItem(IconData icon, String title, VoidCallback onTap,
+      {bool isActive = false}) {
     return Container(
       color: isActive ? Colors.white.withOpacity(0.1) : Colors.transparent,
       child: ListTile(

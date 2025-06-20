@@ -5,7 +5,8 @@ class AdminTambahEdukasiScreen extends StatefulWidget {
   const AdminTambahEdukasiScreen({super.key});
 
   @override
-  State<AdminTambahEdukasiScreen> createState() => _AdminTambahEdukasiScreenState();
+  State<AdminTambahEdukasiScreen> createState() =>
+      _AdminTambahEdukasiScreenState();
 }
 
 class _AdminTambahEdukasiScreenState extends State<AdminTambahEdukasiScreen> {
@@ -16,7 +17,7 @@ class _AdminTambahEdukasiScreenState extends State<AdminTambahEdukasiScreen> {
   final _waktuBacaController = TextEditingController();
   final _durasiController = TextEditingController();
   final _urlController = TextEditingController();
-  
+
   String _jenisKonten = 'Artikel';
   bool _isLoading = false;
 
@@ -44,9 +45,13 @@ class _AdminTambahEdukasiScreenState extends State<AdminTambahEdukasiScreen> {
       await FirebaseFirestore.instance.collection('edukasi').add({
         'judul': _judulController.text.trim(),
         'jenis': _jenisKonten,
-        'konten': _jenisKonten == 'Artikel' ? _kontenController.text.trim() : '',
-        'penulis': _jenisKonten == 'Artikel' ? _penulisController.text.trim() : 'Admin',
-        'waktuBaca': _jenisKonten == 'Artikel' ? _waktuBacaController.text.trim() : '',
+        'konten':
+            _jenisKonten == 'Artikel' ? _kontenController.text.trim() : '',
+        'penulis': _jenisKonten == 'Artikel'
+            ? _penulisController.text.trim()
+            : 'Admin',
+        'waktuBaca':
+            _jenisKonten == 'Artikel' ? _waktuBacaController.text.trim() : '',
         'durasi': _jenisKonten == 'Video' ? _durasiController.text.trim() : '',
         'url': _jenisKonten == 'Video' ? _urlController.text.trim() : '',
         'dilihat': 0,
@@ -104,7 +109,8 @@ class _AdminTambahEdukasiScreenState extends State<AdminTambahEdukasiScreen> {
               pinned: true,
               backgroundColor: Colors.transparent,
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                icon:
+                    const Icon(Icons.arrow_back, color: Colors.white, size: 28),
                 onPressed: () => Navigator.pop(context),
               ),
               flexibleSpace: FlexibleSpaceBar(
@@ -130,7 +136,6 @@ class _AdminTambahEdukasiScreenState extends State<AdminTambahEdukasiScreen> {
                 ),
               ),
             ),
-            
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -192,9 +197,9 @@ class _AdminTambahEdukasiScreenState extends State<AdminTambahEdukasiScreen> {
                             ),
                           ],
                         ),
-                        
+
                         const SizedBox(height: 20),
-                        
+
                         // Judul
                         TextFormField(
                           controller: _judulController,
@@ -218,9 +223,9 @@ class _AdminTambahEdukasiScreenState extends State<AdminTambahEdukasiScreen> {
                             return null;
                           },
                         ),
-                        
+
                         const SizedBox(height: 16),
-                        
+
                         // Conditional Fields based on content type
                         if (_jenisKonten == 'Artikel') ...[
                           // Konten Artikel
@@ -247,9 +252,9 @@ class _AdminTambahEdukasiScreenState extends State<AdminTambahEdukasiScreen> {
                               return null;
                             },
                           ),
-                          
+
                           const SizedBox(height: 16),
-                          
+
                           // Penulis
                           TextFormField(
                             controller: _penulisController,
@@ -273,9 +278,9 @@ class _AdminTambahEdukasiScreenState extends State<AdminTambahEdukasiScreen> {
                               return null;
                             },
                           ),
-                          
+
                           const SizedBox(height: 16),
-                          
+
                           // Waktu Baca
                           TextFormField(
                             controller: _waktuBacaController,
@@ -323,9 +328,9 @@ class _AdminTambahEdukasiScreenState extends State<AdminTambahEdukasiScreen> {
                               return null;
                             },
                           ),
-                          
+
                           const SizedBox(height: 16),
-                          
+
                           // URL Video
                           TextFormField(
                             controller: _urlController,
@@ -344,9 +349,9 @@ class _AdminTambahEdukasiScreenState extends State<AdminTambahEdukasiScreen> {
                             ),
                           ),
                         ],
-                        
+
                         const SizedBox(height: 32),
-                        
+
                         // Save Button
                         SizedBox(
                           width: double.infinity,

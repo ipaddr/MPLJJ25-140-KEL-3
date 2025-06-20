@@ -23,7 +23,8 @@ Color getColorForStatus(String? status, BuildContext context) {
     case 'Berlebih':
       return const Color.fromARGB(255, 255, 82, 82); // Merah
     case 'Obesitas': // Menambahkan case untuk Obesitas
-      return const Color.fromARGB(255, 180, 50, 50); // Merah Tua (Sesuai PemantauanGiziScreen)
+      return const Color.fromARGB(
+          255, 180, 50, 50); // Merah Tua (Sesuai PemantauanGiziScreen)
     case 'Normal':
     default:
       // Di PemantauanGiziScreen menggunakan: return const Color.fromARGB(255, 34, 255, 0); // Hijau cerah

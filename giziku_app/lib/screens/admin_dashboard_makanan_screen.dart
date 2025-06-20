@@ -17,48 +17,84 @@ class _AdminDashboardMakananScreenState
   bool _isLoading = true;
   String _namaAdmin = 'Admin';
 
-  int _totalStock = 0;
+  // int _totalStock = 0; // REMOVED
+  int _bantuanBulanIni = 0; // ADDED
   int _totalPaket = 0;
   Map<int, int> _paketDistribution = {};
 
   @override
   void initState() {
     super.initState();
-    _loadMakananData();
+    _loadDashboardData(); // Renamed from _loadMakananData
   }
 
-  Future<void> _loadMakananData() async {
+  Future<void> _loadDashboardData() async {
+    if (!mounted) return;
+    setState(() {
+      _isLoading = true;
+    });
     try {
-      // Load data dari collection riwayatAmbilMakanan
+      // 1. Load data untuk distribusi paket makanan
       final makananSnapshot = await FirebaseFirestore.instance
           .collection('riwayatAmbilMakanan')
           .get();
 
       Map<int, int> paketCount = {};
-      int totalDistributed = 0;
 
       for (var doc in makananSnapshot.docs) {
         final data = doc.data();
         final tipePaket = data['tipeMakanan'] as int? ?? 1;
 
         paketCount[tipePaket] = (paketCount[tipePaket] ?? 0) + 1;
-        totalDistributed++;
+        // totalDistributed++; // Not strictly needed for this screen's display anymore
       }
 
-      // Simulasi stock (dalam implementasi nyata bisa dari collection terpisah)
-      int estimatedStock =
-          totalDistributed + 50; // Stock + yang sudah didistribusi
+      // 2. Load data untuk bantuan bulan ini
+      int currentMonthBantuan = 0;
+      final now = DateTime.now();
+      final startOfMonth = DateTime(now.year, now.month, 1);
+      final startOfNextMonth = (now.month == 12)
+          ? DateTime(now.year + 1, 1, 1)
+          : DateTime(now.year, now.month + 1, 1);
+
+      try {
+        final bantuanSnapshot = await FirebaseFirestore.instance
+            .collection('riwayatAmbilMakanan')
+            .where('timestamp',
+                isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
+            .where('timestamp',
+                isLessThan: Timestamp.fromDate(startOfNextMonth))
+            .get();
+        currentMonthBantuan = bantuanSnapshot.docs.length;
+      } catch (e) {
+        print(
+            'Error loading bantuan bulan ini using timestamp field: $e. Trying "tanggal" field.');
+        // Fallback to 'tanggal' field if 'timestamp' fails
+        try {
+          final bantuanSnapshotFallback = await FirebaseFirestore.instance
+              .collection('riwayatAmbilMakanan')
+              .where('tanggal',
+                  isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
+              .where('tanggal',
+                  isLessThan: Timestamp.fromDate(startOfNextMonth))
+              .get();
+          currentMonthBantuan = bantuanSnapshotFallback.docs.length;
+        } catch (e2) {
+          print('Error loading bantuan bulan ini using tanggal field: $e2');
+          currentMonthBantuan = 0; // Default to 0 if both attempts fail
+        }
+      }
 
       if (mounted) {
         setState(() {
-          _totalStock = estimatedStock;
+          _bantuanBulanIni = currentMonthBantuan;
           _totalPaket = paketCount.length;
           _paketDistribution = paketCount;
           _isLoading = false;
         });
       }
     } catch (e) {
-      print('Error loading makanan data: $e');
+      print('Error loading dashboard data: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -116,10 +152,7 @@ class _AdminDashboardMakananScreenState
                 IconButton(
                   icon: const Icon(Icons.refresh, color: Colors.white),
                   onPressed: () {
-                    setState(() {
-                      _isLoading = true;
-                    });
-                    _loadMakananData();
+                    _loadDashboardData(); // Call the updated data loading function
                   },
                 ),
               ],
@@ -159,10 +192,10 @@ class _AdminDashboardMakananScreenState
                             children: [
                               Expanded(
                                 child: _buildSummaryCard(
-                                  'Total Stock',
-                                  _totalStock.toString(),
-                                  Icons.inventory,
-                                  const Color(0xFF4CAF50),
+                                  'Bantuan Bulan Ini', // CHANGED Title
+                                  _bantuanBulanIni.toString(), // CHANGED Value
+                                  Icons.card_giftcard, // CHANGED Icon (example)
+                                  Colors.orange, // CHANGED Color (example)
                                 ),
                               ),
                               const SizedBox(width: 16),

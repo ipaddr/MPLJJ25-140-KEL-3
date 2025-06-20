@@ -16,8 +16,8 @@ class _TambahMakananScreenState extends State<TambahMakananScreen>
     1: 'Nasi, Ayam, Telor, Sayur, Buah',
     2: 'Nasi, Ayam, Tahu, Sayur, Buah',
     3: 'Nasi, Ikan, Telor, Sayur, Buah',
-    4: 'Nasi, Daging, Telor, Sayur, Buah',
-    5: 'Nasi, Ikan, Tahu, Sayur, Buah',
+    4: 'Nasi, Ikan, Tempe, Sayur, Buah',
+    5: 'Nasi, Daging, Telor, Sayur, Buah',
   };
 
   final Map<int, String> gambarMakanan = {

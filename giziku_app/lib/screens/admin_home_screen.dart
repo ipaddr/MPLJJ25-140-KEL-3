@@ -17,9 +17,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
   String _namaAdmin = "Admin";
   bool _isLoading = true;
 
-  // Data statistik
-  int _totalAnak = 0;
-  int _bantuanBulanIni = 0;
   Map<String, int> _statusGiziData = {};
   List<Map<String, dynamic>> _recentActivities = [];
 
@@ -81,12 +78,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
     try {
       print('Mulai loading statistik data...'); // Debug log
 
-      // Load total anak terdaftar (dari collection users)
-      await _loadTotalAnak();
-
-      // Load bantuan makanan bulan ini (dari collection riwayatAmbilMakanan)
-      await _loadBantuanBulanIni();
-
       // Load status gizi anak (dari collection riwayatCekGizi)
       await _loadStatusGizi();
 
@@ -106,95 +97,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
         setState(() {
           _isLoading = false;
         });
-      }
-    }
-  }
-
-  Future<void> _loadTotalAnak() async {
-    try {
-      // Ambil semua dokumen dari collection 'users'
-      final usersSnapshot =
-          await FirebaseFirestore.instance.collection('users').get();
-
-      if (mounted) {
-        setState(() {
-          _totalAnak = usersSnapshot.docs.length;
-        });
-      }
-
-      print('Total anak terdaftar: ${usersSnapshot.docs.length}'); // Debug log
-    } catch (e) {
-      print('Error loading total anak: $e');
-
-      // Set nilai default jika terjadi error
-      if (mounted) {
-        setState(() {
-          _totalAnak = 0;
-        });
-      }
-    }
-  }
-
-  Future<void> _loadBantuanBulanIni() async {
-    try {
-      final now = DateTime.now();
-      final startOfMonth = DateTime(now.year, now.month, 1);
-      final endOfMonth = DateTime(now.year, now.month + 1, 1)
-          .subtract(const Duration(days: 1));
-
-      print(
-          'Loading bantuan dari: $startOfMonth sampai: $endOfMonth'); // Debug log
-
-      final bantuanSnapshot = await FirebaseFirestore.instance
-          .collection('riwayatAmbilMakanan')
-          .where('timestamp',
-              isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
-          .where('timestamp',
-              isLessThanOrEqualTo: Timestamp.fromDate(endOfMonth))
-          .get();
-
-      if (mounted) {
-        setState(() {
-          _bantuanBulanIni = bantuanSnapshot.docs.length;
-        });
-      }
-
-      print('Bantuan bulan ini: ${bantuanSnapshot.docs.length}'); // Debug log
-    } catch (e) {
-      print('Error loading bantuan bulan ini: $e');
-
-      // Coba dengan field 'tanggal' jika 'timestamp' tidak ada
-      try {
-        final now = DateTime.now();
-        final startOfMonth = DateTime(now.year, now.month, 1);
-        final endOfMonth = DateTime(now.year, now.month + 1, 1)
-            .subtract(const Duration(days: 1));
-
-        final bantuanSnapshot = await FirebaseFirestore.instance
-            .collection('riwayatAmbilMakanan')
-            .where('tanggal',
-                isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
-            .where('tanggal',
-                isLessThanOrEqualTo: Timestamp.fromDate(endOfMonth))
-            .get();
-
-        if (mounted) {
-          setState(() {
-            _bantuanBulanIni = bantuanSnapshot.docs.length;
-          });
-        }
-
-        print(
-            'Bantuan bulan ini (dengan field tanggal): ${bantuanSnapshot.docs.length}'); // Debug log
-      } catch (e2) {
-        print('Error loading bantuan dengan field tanggal: $e2');
-
-        // Set nilai default jika kedua cara gagal
-        if (mounted) {
-          setState(() {
-            _bantuanBulanIni = 0;
-          });
-        }
       }
     }
   }
@@ -483,10 +385,8 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Statistik Cards
-                            _buildStatistikSection(),
-
-                            const SizedBox(height: 24),
+                            // Statistik Cards (dihapus)
+                            // const SizedBox(height: 24), // Dihapus jika tidak ada statistik card di atasnya
 
                             // Status Gizi Chart
                             _buildStatusGiziChart(),
@@ -530,103 +430,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
             Text('Memuat data dashboard...'),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildStatistikSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Statistik Utama',
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Cards Grid - Ukuran diperkecil
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: 2,
-          mainAxisSpacing: 12, // Diperkecil dari 16
-          crossAxisSpacing: 12, // Diperkecil dari 16
-          childAspectRatio:
-              1.5, // Diperbesar dari 1.2 untuk membuat card lebih pendek
-          children: [
-            _buildStatCard(
-              'Total Anak Terdaftar',
-              _totalAnak.toString(),
-              Icons.people,
-              const Color(0xFF4CAF50),
-            ),
-            _buildStatCard(
-              'Bantuan Bulan Ini',
-              _bantuanBulanIni.toString(),
-              Icons.restaurant_menu,
-              const Color(0xFF2196F3),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatCard(
-      String title, String value, IconData icon, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(12), // Diperkecil dari 16
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12), // Diperkecil dari 16
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08), // Diperkecil opacity shadow
-            blurRadius: 6, // Diperkecil dari 8
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6), // Diperkecil dari 8
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6), // Diperkecil dari 8
-                ),
-                child: Icon(icon, color: color, size: 18), // Diperkecil dari 20
-              ),
-            ],
-          ),
-          const Spacer(),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 20, // Diperkecil dari 24
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2D3748),
-            ),
-          ),
-          const SizedBox(height: 2), // Diperkecil dari 4
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 11, // Diperkecil dari 12
-              color: Color(0xFF718096),
-            ),
-            maxLines: 2, // Tambahkan maxLines untuk text wrapping
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
       ),
     );
   }

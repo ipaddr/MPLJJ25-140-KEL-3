@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:giziku_app/utils/gizi_helpers.dart'; // Untuk getEmoticonForStatus dan getColorForStatus
+import 'package:intl/intl.dart'; // Untuk formatting tanggal
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -10,12 +12,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _kelasController = TextEditingController();
-  final TextEditingController _namaOrtuController = TextEditingController();
-
-  String? _nama;
-  String? _email;
+  List<Map<String, dynamic>> _childrenList = [];
   bool _isLoading = false;
   String _namaPengguna = "Pengguna";
 
@@ -30,89 +27,64 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final user = FirebaseAuth.instance.currentUser;
 
     if (user != null) {
-      _email = user.email;
       _namaPengguna = user.displayName ?? user.email ?? "Pengguna";
-
-      // Ambil data dari collection users
-      final doc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-
-      if (doc.exists) {
-        final data = doc.data()!;
-        _kelasController.text = data['kelas'] ?? '';
-        _namaOrtuController.text = data['namaOrtu'] ?? '';
-      }
-
-      // Ambil nama anak dari data terakhir di riwayatCekGizi
-      await _loadNamaAnak(user.uid);
+      await _loadChildrenProfiles(user.uid);
+    } else {
+      _childrenList = [];
     }
 
-    setState(() => _isLoading = false);
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
   }
 
-  Future<void> _loadNamaAnak(String userId) async {
+  Future<void> _loadChildrenProfiles(String userId) async {
     try {
-      // Query untuk mengambil data terakhir berdasarkan tanggalPengecekan
       final querySnapshot = await FirebaseFirestore.instance
           .collection('riwayatCekGizi')
           .where('userId', isEqualTo: userId)
+          .orderBy('nama')
           .orderBy('tanggalPengecekan', descending: true)
-          .limit(1)
           .get();
 
       if (querySnapshot.docs.isNotEmpty) {
-        final latestData = querySnapshot.docs.first.data();
-        _nama = latestData['nama'] ?? '';
+        Map<String, Map<String, dynamic>> uniqueChildren = {};
+
+        for (var doc in querySnapshot.docs) {
+          final data = doc.data();
+          final String childName = data['nama'] ?? 'Nama Tidak Diketahui';
+
+          if (!uniqueChildren.containsKey(childName)) {
+            uniqueChildren[childName] = {
+              'nama': childName,
+              'statusGizi': data['statusGizi'] ?? 'N/A',
+              'imt': data['imt']?.toStringAsFixed(1) ?? 'N/A',
+              'tanggalPengecekan':
+                  (data['tanggalPengecekan'] as Timestamp?)?.toDate(),
+              'usia': data['usia'] ?? 'N/A',
+              'beratBadan': data['beratBadan']?.toStringAsFixed(1) ?? 'N/A',
+              'tinggiBadan': data['tinggiBadan']?.toStringAsFixed(0) ?? 'N/A',
+            };
+          }
+        }
+        _childrenList = uniqueChildren.values.toList();
+        _childrenList.sort(
+            (a, b) => (a['nama'] as String).compareTo(b['nama'] as String));
       } else {
-        // Jika belum ada data riwayat, ambil dari displayName atau email
-        final user = FirebaseAuth.instance.currentUser;
-        _nama = user?.displayName ?? user?.email?.split('@')[0] ?? 'Anak';
+        _childrenList = [];
       }
     } catch (e) {
-      print('Error loading nama anak: $e');
-      // Fallback jika terjadi error
-      final user = FirebaseAuth.instance.currentUser;
-      _nama = user?.displayName ?? user?.email?.split('@')[0] ?? 'Anak';
-    }
-  }
-
-  Future<void> _simpanProfil() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
-
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      try {
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-          'kelas': _kelasController.text.trim(),
-          'namaOrtu': _namaOrtuController.text.trim(),
-          'updatedAt': FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
-
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profil berhasil diperbarui'),
-              backgroundColor: Color(0xFF018175),
-            ),
-          );
-        }
-      } catch (e) {
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+      print('Error loading children profiles: $e');
+      _childrenList = [];
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error memuat data anak: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
-
-    setState(() => _isLoading = false);
   }
 
   Future<void> _logout() async {
@@ -185,8 +157,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   void dispose() {
-    _kelasController.dispose();
-    _namaOrtuController.dispose();
     super.dispose();
   }
 
@@ -210,7 +180,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         child: CustomScrollView(
           slivers: [
-            // Custom App Bar with gradient - sama dengan HomeScreen
             SliverAppBar(
               expandedHeight: isLargeScreen ? 200 : 160,
               floating: false,
@@ -308,8 +277,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
-
-            // Main Content
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(20.0),
@@ -318,7 +285,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     : Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Profile Info Card - design sama dengan HomeScreen
                           Container(
                             width: double.infinity,
                             decoration: BoxDecoration(
@@ -344,69 +310,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               child: _buildProfileContent(),
                             ),
                           ),
-
                           const SizedBox(height: 24),
-
-                          // Edit Profile Section
-                          const Text(
-                            'Edit Profil 📝',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 20,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Form Card
-                          Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(20.0),
-                              child: Form(
-                                key: _formKey,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Kelas Field
-                                    _buildModernTextField(
-                                      controller: _kelasController,
-                                      label: 'Kelas',
-                                      icon: Icons.school,
-                                      validator: (value) => value!.isEmpty
-                                          ? 'Kelas tidak boleh kosong'
-                                          : null,
-                                    ),
-                                    const SizedBox(height: 16),
-
-                                    // Nama Orang Tua Field
-                                    _buildModernTextField(
-                                      controller: _namaOrtuController,
-                                      label: 'Nama Orang Tua',
-                                      icon: Icons.family_restroom,
-                                      validator: (value) => value!.isEmpty
-                                          ? 'Nama orang tua tidak boleh kosong'
-                                          : null,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(height: 24),
-
-                          // Action List - dibuat lebih kecil dan dalam bentuk list
                           const Text(
                             'Aksi Cepat 🚀',
                             style: TextStyle(
@@ -416,8 +320,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ),
                           ),
                           const SizedBox(height: 16),
-
-                          // List Actions
                           Container(
                             decoration: BoxDecoration(
                               color: Colors.white,
@@ -433,14 +335,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             child: Column(
                               children: [
                                 _buildActionListItem(
-                                  icon: Icons.save,
-                                  title: 'Simpan Profil',
-                                  subtitle: 'Update informasi profil Anda',
-                                  color: const Color(0xFF018175),
-                                  onTap: _simpanProfil,
-                                  showDivider: true,
-                                ),
-                                _buildActionListItem(
                                   icon: Icons.logout,
                                   title: 'Logout',
                                   subtitle: 'Keluar dari aplikasi',
@@ -451,7 +345,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ],
                             ),
                           ),
-
                           const SizedBox(height: 30),
                         ],
                       ),
@@ -465,7 +358,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Action List Item Widget - design kecil dan clean
   Widget _buildActionListItem({
     required IconData icon,
     required String title,
@@ -531,7 +423,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               Divider(
                 height: 1,
                 color: Colors.grey[200],
-                indent: 46, // Sejajar dengan text
+                indent: 46,
               ),
             ],
           ],
@@ -575,193 +467,210 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildProfileContent() {
     return Column(
       children: [
-        // Avatar
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFF018175).withOpacity(0.1),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: const Icon(
-            Icons.person,
-            size: 60,
-            color: Color(0xFF018175),
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Name
-        Text(
-          _nama ?? 'Nama Belum Diatur',
-          style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF018175),
-          ),
-        ),
-        const SizedBox(height: 8),
-
-        // Email
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(
-            _email ?? 'Email tidak tersedia',
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.grey,
+        if (_childrenList.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20.0),
+            child: Column(
+              children: [
+                Icon(Icons.people_outline, size: 48, color: Colors.grey[400]),
+                const SizedBox(height: 16),
+                const Text(
+                  'Belum ada data anak.',
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Silakan lakukan pemantauan gizi untuk menambahkan data anak.',
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
-          ),
-        ),
-        const SizedBox(height: 16),
+          )
+        else
+          // Container dengan styling serupa Aksi Cepat
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white, // Warna latar putih
+              borderRadius: BorderRadius.circular(16), // Sudut membulat
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                  vertical: 8.0), // Padding di dalam container
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Text(
+                      'Profil Anak',
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2D3748)),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // ListView.builder dimulai di sini
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: _childrenList.length,
+                    itemBuilder: (context, index) {
+                      final childData = _childrenList[index];
+                      final DateTime? tglCek = childData['tanggalPengecekan'];
+                      final String tglFormatted = tglCek != null
+                          ? DateFormat('dd MMM yyyy', 'id_ID').format(tglCek)
+                          : 'N/A';
 
-        // Additional Info
-        Row(
-          children: [
-            Expanded(
-              child: _buildInfoCard(
-                'Kelas',
-                _kelasController.text.isEmpty
-                    ? 'Belum diatur'
-                    : _kelasController.text,
-                Icons.school,
+                      // Menggunakan ListTile untuk tampilan yang lebih minimalis
+                      return Container(
+                        margin: const EdgeInsets.symmetric(vertical: 4.0),
+                        decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.9),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 5,
+                                offset: const Offset(0, 2),
+                              )
+                            ]),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16.0, vertical: 8.0),
+                          leading: Icon(
+                            getEmoticonForStatus(childData['statusGizi']),
+                            size: 40,
+                            color: getColorForStatus(
+                                childData['statusGizi'], context),
+                          ),
+                          title: Text(
+                            childData['nama'] ?? 'Nama Anak',
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF018175),
+                            ),
+                          ),
+                          subtitle: Text(
+                            'Status: ${childData['statusGizi']} (IMT: ${childData['imt']})\nDicek pada: $tglFormatted',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          trailing: Icon(Icons.arrow_forward_ios,
+                              size: 16, color: Colors.grey[400]),
+                          onTap: () {
+                            _showChildDetailPopup(context, childData);
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildInfoCard(
-                'Orang Tua',
-                _namaOrtuController.text.isEmpty
-                    ? 'Belum diatur'
-                    : _namaOrtuController.text,
-                Icons.family_restroom,
-              ),
-            ),
-          ],
-        ),
+          ),
       ],
     );
   }
 
-  Widget _buildInfoCard(String title, String value, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: const Color(0xFF018175), size: 20),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.grey,
-              fontWeight: FontWeight.w500,
+  void _showChildDetailPopup(
+      BuildContext context, Map<String, dynamic> childData) {
+    final DateTime? tglCek = childData['tanggalPengecekan'];
+    final String tglFormatted = tglCek != null
+        ? DateFormat('dd MMMM yyyy, HH:mm', 'id_ID').format(tglCek)
+        : 'N/A';
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                getEmoticonForStatus(childData['statusGizi']),
+                size: 30,
+                color: getColorForStatus(childData['statusGizi'], context),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  childData['nama'] ?? 'Detail Anak',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF018175),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                _buildDetailRow(
+                    'Status Gizi:', '${childData['statusGizi'] ?? 'N/A'}'),
+                _buildDetailRow('IMT:', '${childData['imt'] ?? 'N/A'} kg/m²'),
+                _buildDetailRow(
+                    'Usia Saat Cek:', '${childData['usia'] ?? 'N/A'} tahun'),
+                _buildDetailRow(
+                    'Berat Badan:', '${childData['beratBadan'] ?? 'N/A'} kg'),
+                _buildDetailRow(
+                    'Tinggi Badan:', '${childData['tinggiBadan'] ?? 'N/A'} cm'),
+                _buildDetailRow('Tanggal Pengecekan:', tglFormatted),
+              ],
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2D3748),
+          actions: <Widget>[
+            TextButton(
+              child: const Text(
+                'Tutup',
+                style: TextStyle(color: Color(0xFF018175)),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
             ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildDetailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '$label ',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[700],
+              fontSize: 14,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 14, color: Color(0xFF2D3748)),
+            ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildModernTextField({
-    required TextEditingController controller,
-    required String label,
-    required IconData icon,
-    required String? Function(String?) validator,
-  }) {
-    return TextFormField(
-      controller: controller,
-      validator: validator,
-      style: const TextStyle(fontSize: 16),
-      decoration: InputDecoration(
-        labelText: label,
-        prefixIcon: Icon(icon, color: const Color(0xFF018175)),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF018175), width: 2),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
-        ),
-        filled: true,
-        fillColor: Colors.grey[50],
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      ),
-    );
-  }
-
-  Widget _buildModernActionButton(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required String subtitle,
-    required Gradient gradient,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          gradient: gradient,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, size: 32, color: Colors.white),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 12,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
@@ -906,7 +815,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             _buildDrawerItem(Icons.person_outline, 'Profil', () {
               Navigator.pop(context);
-              // Already on Profile screen
             }, isActive: true),
             const Divider(color: Colors.white24),
             _buildDrawerItem(Icons.home, 'Home', () {

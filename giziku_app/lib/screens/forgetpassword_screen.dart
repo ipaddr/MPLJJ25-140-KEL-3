@@ -8,12 +8,12 @@ class ForgetPasswordScreen extends StatefulWidget {
   State<ForgetPasswordScreen> createState() => _ForgetPasswordScreenState();
 }
 
-class _ForgetPasswordScreenState extends State<ForgetPasswordScreen> 
+class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
     with TickerProviderStateMixin {
   final TextEditingController _emailController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
-  
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -65,9 +65,9 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
       await FirebaseAuth.instance.sendPasswordResetEmail(
         email: _emailController.text.trim(),
       );
-      
+
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text(
@@ -81,7 +81,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
           ),
         ),
       );
-      
+
       // Kembali ke login screen setelah 2 detik
       await Future.delayed(const Duration(seconds: 2));
       if (mounted) {
@@ -99,7 +99,7 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
         default:
           message = 'Terjadi kesalahan: ${e.message}';
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -151,7 +151,8 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
               pinned: true,
               backgroundColor: Colors.transparent,
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                icon:
+                    const Icon(Icons.arrow_back, color: Colors.white, size: 28),
                 onPressed: () => Navigator.pop(context),
               ),
               flexibleSpace: FlexibleSpaceBar(
@@ -271,7 +272,8 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
                                         // Email Field
                                         TextFormField(
                                           controller: _emailController,
-                                          keyboardType: TextInputType.emailAddress,
+                                          keyboardType:
+                                              TextInputType.emailAddress,
                                           decoration: InputDecoration(
                                             labelText: 'Email',
                                             hintText: 'Masukkan email Anda',
@@ -280,13 +282,15 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
                                               color: Color(0xFF018175),
                                             ),
                                             border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                               borderSide: BorderSide(
                                                 color: Colors.grey.shade300,
                                               ),
                                             ),
                                             focusedBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                               borderSide: const BorderSide(
                                                 color: Color(0xFF018175),
                                                 width: 2,
@@ -296,7 +300,8 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
                                             fillColor: Colors.grey.shade50,
                                           ),
                                           validator: (value) {
-                                            if (value == null || value.isEmpty) {
+                                            if (value == null ||
+                                                value.isEmpty) {
                                               return 'Email wajib diisi';
                                             }
                                             if (!value.contains('@')) {
@@ -313,12 +318,16 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
                                           width: double.infinity,
                                           height: 50,
                                           child: ElevatedButton(
-                                            onPressed: _isLoading ? null : _resetPassword,
+                                            onPressed: _isLoading
+                                                ? null
+                                                : _resetPassword,
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: const Color(0xFF018175),
+                                              backgroundColor:
+                                                  const Color(0xFF018175),
                                               foregroundColor: Colors.white,
                                               shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(12),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                               ),
                                               elevation: 3,
                                             ),
@@ -326,7 +335,8 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
                                                 ? const SizedBox(
                                                     width: 20,
                                                     height: 20,
-                                                    child: CircularProgressIndicator(
+                                                    child:
+                                                        CircularProgressIndicator(
                                                       color: Colors.white,
                                                       strokeWidth: 2,
                                                     ),
@@ -334,8 +344,10 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
                                                 : Text(
                                                     'Kirim Link Reset',
                                                     style: TextStyle(
-                                                      fontSize: isTablet ? 18 : 16,
-                                                      fontWeight: FontWeight.bold,
+                                                      fontSize:
+                                                          isTablet ? 18 : 16,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                     ),
                                                   ),
                                           ),
@@ -362,7 +374,8 @@ class _ForgetPasswordScreenState extends State<ForgetPasswordScreen>
                                           text: 'Kembali ke Login',
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
-                                            decoration: TextDecoration.underline,
+                                            decoration:
+                                                TextDecoration.underline,
                                           ),
                                         ),
                                       ],
