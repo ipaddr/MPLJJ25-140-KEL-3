@@ -9,13 +9,14 @@ class AdminLoginScreen extends StatefulWidget {
   State<AdminLoginScreen> createState() => _AdminLoginScreenState();
 }
 
-class _AdminLoginScreenState extends State<AdminLoginScreen> with TickerProviderStateMixin {
+class _AdminLoginScreenState extends State<AdminLoginScreen>
+    with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
-  
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -67,7 +68,8 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> with TickerProvider
     }
 
     try {
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      UserCredential userCredential =
+          await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
@@ -101,8 +103,9 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> with TickerProvider
         case 'user-not-found':
           message = 'Tidak ada admin yang ditemukan untuk email tersebut.';
           break;
-        case 'wrong-password':
-          message = 'Password salah.';
+        case 'wrong-password': // Keep this case just in case
+        case 'invalid-credential': // Add this case for general credential errors
+          message = 'Email atau password admin salah.'; // More general message
           break;
         case 'invalid-email':
           message = 'Format email tidak valid.';
@@ -110,7 +113,7 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> with TickerProvider
         default:
           message = 'Login admin gagal: ${e.message ?? "Terjadi kesalahan"}';
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -166,7 +169,8 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> with TickerProvider
               pinned: true,
               backgroundColor: Colors.transparent,
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
+                icon:
+                    const Icon(Icons.arrow_back, color: Colors.white, size: 28),
                 onPressed: () => Navigator.pop(context),
               ),
               flexibleSpace: FlexibleSpaceBar(
@@ -285,7 +289,8 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> with TickerProvider
                                         // Email Field
                                         TextFormField(
                                           controller: _emailController,
-                                          keyboardType: TextInputType.emailAddress,
+                                          keyboardType:
+                                              TextInputType.emailAddress,
                                           decoration: InputDecoration(
                                             labelText: 'Email Admin',
                                             hintText: 'Masukkan email admin',
@@ -294,13 +299,15 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> with TickerProvider
                                               color: Color(0xFF2E7D32),
                                             ),
                                             border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                               borderSide: BorderSide(
                                                 color: Colors.grey.shade300,
                                               ),
                                             ),
                                             focusedBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                               borderSide: const BorderSide(
                                                 color: Color(0xFF2E7D32),
                                                 width: 2,
@@ -310,7 +317,8 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> with TickerProvider
                                             fillColor: Colors.grey.shade50,
                                           ),
                                           validator: (value) {
-                                            if (value == null || value.isEmpty) {
+                                            if (value == null ||
+                                                value.isEmpty) {
                                               return 'Email admin wajib diisi';
                                             }
                                             if (!value.contains('@')) {
@@ -342,18 +350,21 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> with TickerProvider
                                               ),
                                               onPressed: () {
                                                 setState(() {
-                                                  _obscurePassword = !_obscurePassword;
+                                                  _obscurePassword =
+                                                      !_obscurePassword;
                                                 });
                                               },
                                             ),
                                             border: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                               borderSide: BorderSide(
                                                 color: Colors.grey.shade300,
                                               ),
                                             ),
                                             focusedBorder: OutlineInputBorder(
-                                              borderRadius: BorderRadius.circular(12),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
                                               borderSide: const BorderSide(
                                                 color: Color(0xFF2E7D32),
                                                 width: 2,
@@ -363,7 +374,8 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> with TickerProvider
                                             fillColor: Colors.grey.shade50,
                                           ),
                                           validator: (value) {
-                                            if (value == null || value.isEmpty) {
+                                            if (value == null ||
+                                                value.isEmpty) {
                                               return 'Password admin wajib diisi';
                                             }
                                             if (value.length < 6) {
@@ -380,12 +392,15 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> with TickerProvider
                                           width: double.infinity,
                                           height: 50,
                                           child: ElevatedButton(
-                                            onPressed: _isLoading ? null : _adminLogin,
+                                            onPressed:
+                                                _isLoading ? null : _adminLogin,
                                             style: ElevatedButton.styleFrom(
-                                              backgroundColor: const Color(0xFF2E7D32),
+                                              backgroundColor:
+                                                  const Color(0xFF2E7D32),
                                               foregroundColor: Colors.white,
                                               shape: RoundedRectangleBorder(
-                                                borderRadius: BorderRadius.circular(12),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
                                               ),
                                               elevation: 3,
                                             ),
@@ -393,7 +408,8 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> with TickerProvider
                                                 ? const SizedBox(
                                                     width: 20,
                                                     height: 20,
-                                                    child: CircularProgressIndicator(
+                                                    child:
+                                                        CircularProgressIndicator(
                                                       color: Colors.white,
                                                       strokeWidth: 2,
                                                     ),
@@ -401,8 +417,10 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> with TickerProvider
                                                 : Text(
                                                     'Masuk sebagai Admin',
                                                     style: TextStyle(
-                                                      fontSize: isTablet ? 18 : 16,
-                                                      fontWeight: FontWeight.bold,
+                                                      fontSize:
+                                                          isTablet ? 18 : 16,
+                                                      fontWeight:
+                                                          FontWeight.bold,
                                                     ),
                                                   ),
                                           ),
@@ -416,7 +434,8 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> with TickerProvider
 
                                 // Register Admin Link
                                 TextButton(
-                                  onPressed: () => Navigator.pushNamed(context, '/admin_register'),
+                                  onPressed: () => Navigator.pushNamed(
+                                      context, '/admin_register'),
                                   child: RichText(
                                     text: TextSpan(
                                       style: TextStyle(
@@ -424,12 +443,15 @@ class _AdminLoginScreenState extends State<AdminLoginScreen> with TickerProvider
                                         color: Colors.white.withOpacity(0.9),
                                       ),
                                       children: const [
-                                        TextSpan(text: 'Belum terdaftar sebagai admin? '),
+                                        TextSpan(
+                                            text:
+                                                'Belum terdaftar sebagai admin? '),
                                         TextSpan(
                                           text: 'Daftar Admin',
                                           style: TextStyle(
                                             fontWeight: FontWeight.bold,
-                                            decoration: TextDecoration.underline,
+                                            decoration:
+                                                TextDecoration.underline,
                                           ),
                                         ),
                                       ],

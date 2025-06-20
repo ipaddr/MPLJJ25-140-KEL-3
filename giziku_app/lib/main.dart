@@ -20,6 +20,7 @@ import 'screens/pemantauan_gizi_screen.dart';
 import 'screens/riwayat_ambil_makanan_screen.dart';
 import 'screens/riwayat_cek_gizi_screen.dart';
 import 'screens/dashboard_statistik_screen.dart';
+import 'screens/chatbot_screen.dart';
 
 // Admin screens
 import 'screens/admin_home_screen.dart';
@@ -97,6 +98,7 @@ class MyApp extends StatelessWidget {
         '/artikel_lengkap': (context) => const ArtikelLengkapScreen(),
         '/dashboard': (context) => const StatistikBadanChart(),
         '/profile': (context) => const ProfileScreen(),
+        '/chatbot': (context) => const ChatbotScreen(),
 
         // Admin routes
         '/admin_login': (context) => const AdminLoginScreen(),

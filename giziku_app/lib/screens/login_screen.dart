@@ -8,13 +8,14 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen>
+    with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
-  
+
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
@@ -72,7 +73,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         email: _usernameController.text,
         password: _passwordController.text,
       );
-      
+
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/home');
       }
@@ -82,8 +83,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         case 'user-not-found':
           message = 'Tidak ada pengguna yang ditemukan untuk email tersebut.';
           break;
-        case 'wrong-password':
-          message = 'Password salah untuk pengguna tersebut.';
+        case 'wrong-password': // Keep this case just in case
+        case 'invalid-credential': // Add this case for general credential errors
+          message = 'Email atau password salah.'; // More general message
           break;
         case 'invalid-email':
           message = 'Format email tidak valid.';
@@ -91,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
         default:
           message = 'Login gagal: ${e.message ?? "Terjadi kesalahan"}';
       }
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -237,13 +239,15 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                           color: Color(0xFF018175),
                                         ),
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                           borderSide: BorderSide(
                                             color: Colors.grey.shade300,
                                           ),
                                         ),
                                         focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                           borderSide: const BorderSide(
                                             color: Color(0xFF018175),
                                             width: 2,
@@ -285,18 +289,21 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                           ),
                                           onPressed: () {
                                             setState(() {
-                                              _obscurePassword = !_obscurePassword;
+                                              _obscurePassword =
+                                                  !_obscurePassword;
                                             });
                                           },
                                         ),
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                           borderSide: BorderSide(
                                             color: Colors.grey.shade300,
                                           ),
                                         ),
                                         focusedBorder: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius:
+                                              BorderRadius.circular(12),
                                           borderSide: const BorderSide(
                                             color: Color(0xFF018175),
                                             width: 2,
@@ -345,10 +352,12 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                       child: ElevatedButton(
                                         onPressed: _isLoading ? null : _login,
                                         style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(0xFF018175),
+                                          backgroundColor:
+                                              const Color(0xFF018175),
                                           foregroundColor: Colors.white,
                                           shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius:
+                                                BorderRadius.circular(12),
                                           ),
                                           elevation: 3,
                                         ),
@@ -356,7 +365,8 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                                             ? const SizedBox(
                                                 width: 20,
                                                 height: 20,
-                                                child: CircularProgressIndicator(
+                                                child:
+                                                    CircularProgressIndicator(
                                                   color: Colors.white,
                                                   strokeWidth: 2,
                                                 ),
@@ -410,9 +420,10 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
                               color: Colors.white.withOpacity(0.3),
                             ),
                             const SizedBox(height: 16),
-                            
+
                             TextButton.icon(
-                              onPressed: () => Navigator.pushNamed(context, '/admin_login'),
+                              onPressed: () =>
+                                  Navigator.pushNamed(context, '/admin_login'),
                               icon: const Icon(
                                 Icons.admin_panel_settings,
                                 color: Colors.white,

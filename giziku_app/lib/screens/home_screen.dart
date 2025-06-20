@@ -521,6 +521,14 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Navigasi ke layar chatbot
+          Navigator.pushNamed(context, '/chatbot');
+        },
+        tooltip: 'Chat dengan Bot', // Opsional: tooltip untuk aksesibilitas
+        child: const Icon(Icons.chat), // Ikon untuk tombol
+      ),
       drawer: _buildModernDrawer(),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
