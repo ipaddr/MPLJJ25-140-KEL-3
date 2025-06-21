@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -12,12 +13,17 @@ class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
   late AnimationController _logoController;
   late AnimationController _textController;
-  late AnimationController _rippleController;
+  late AnimationController _particleController;
+  late AnimationController _rotationController;
+  late AnimationController _pulseController;
 
-  late Animation<double> _logoScaleAnimation;
-  late Animation<double> _logoOpacityAnimation;
-  late Animation<double> _textOpacityAnimation;
-  late Animation<double> _rippleAnimation;
+  late Animation<double> _logoSlideAnimation;
+  late Animation<double> _logoFadeAnimation;
+  late Animation<double> _textSlideAnimation;
+  late Animation<double> _textFadeAnimation;
+  late Animation<double> _particleAnimation;
+  late Animation<double> _rotationAnimation;
+  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
@@ -25,41 +31,61 @@ class _SplashScreenState extends State<SplashScreen>
 
     // Logo Animation Controller
     _logoController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1800),
       vsync: this,
     );
 
     // Text Animation Controller
     _textController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
 
-    // Ripple Animation Controller
-    _rippleController = AnimationController(
-      duration: const Duration(milliseconds: 2000),
+    // Particle Animation Controller
+    _particleController = AnimationController(
+      duration: const Duration(milliseconds: 3000),
       vsync: this,
     );
 
-    // Logo Animations
-    _logoScaleAnimation = Tween<double>(
+    // Rotation Animation Controller
+    _rotationController = AnimationController(
+      duration: const Duration(seconds: 10),
+      vsync: this,
+    );
+
+    // Pulse Animation Controller
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+
+    // Logo Animations - Slide from top with bounce
+    _logoSlideAnimation = Tween<double>(
+      begin: -300.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(
+      parent: _logoController,
+      curve: Curves.bounceOut,
+    ));
+
+    _logoFadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _logoController,
+      curve: const Interval(0.0, 0.7, curve: Curves.easeInOut),
+    ));
+
+    // Text Animations - Slide from bottom with elastic
+    _textSlideAnimation = Tween<double>(
+      begin: 100.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(
+      parent: _textController,
       curve: Curves.elasticOut,
     ));
 
-    _logoOpacityAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _logoController,
-      curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
-    ));
-
-    // Text Opacity Animation
-    _textOpacityAnimation = Tween<double>(
+    _textFadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(
@@ -67,20 +93,38 @@ class _SplashScreenState extends State<SplashScreen>
       curve: Curves.easeIn,
     ));
 
-    // Ripple Animation
-    _rippleAnimation = Tween<double>(
+    // Particle floating animation
+    _particleAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(
-      parent: _rippleController,
-      curve: Curves.easeOut,
+      parent: _particleController,
+      curve: Curves.linear,
+    ));
+
+    // Rotation animation for background elements
+    _rotationAnimation = Tween<double>(
+      begin: 0.0,
+      end: 2 * math.pi,
+    ).animate(CurvedAnimation(
+      parent: _rotationController,
+      curve: Curves.linear,
+    ));
+
+    // Pulse animation for logo
+    _pulseAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.1,
+    ).animate(CurvedAnimation(
+      parent: _pulseController,
+      curve: Curves.easeInOut,
     ));
 
     // Start animations sequence
     _startAnimations();
 
-    // Timer 3 detik lalu pindah ke halaman login
-    Timer(const Duration(seconds: 3), () {
+    // Timer 4 detik lalu pindah ke halaman login
+    Timer(const Duration(seconds: 4), () {
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/login');
       }
@@ -88,13 +132,16 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _startAnimations() async {
-    // Start ripple animation immediately
-    _rippleController.repeat();
+    // Start continuous animations
+    _rotationController.repeat();
+    _particleController.repeat();
+    _pulseController.repeat(reverse: true);
 
-    // Start logo animation
-    await _logoController.forward();
+    // Sequence animations
+    await Future.delayed(const Duration(milliseconds: 300));
+    _logoController.forward();
 
-    // Start text animation after logo
+    await Future.delayed(const Duration(milliseconds: 800));
     _textController.forward();
   }
 
@@ -102,8 +149,65 @@ class _SplashScreenState extends State<SplashScreen>
   void dispose() {
     _logoController.dispose();
     _textController.dispose();
-    _rippleController.dispose();
+    _particleController.dispose();
+    _rotationController.dispose();
+    _pulseController.dispose();
     super.dispose();
+  }
+
+  Widget _buildFloatingParticle(
+      double top, double left, double size, Color color, double delay) {
+    return AnimatedBuilder(
+      animation: _particleAnimation,
+      builder: (context, child) {
+        final animationValue = (_particleAnimation.value + delay) % 1.0;
+        return Positioned(
+          top: top + (math.sin(animationValue * 2 * math.pi) * 20),
+          left: left + (math.cos(animationValue * 2 * math.pi) * 15),
+          child: Opacity(
+            opacity: (math.sin(animationValue * math.pi) * 0.8).abs(),
+            child: Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.6),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: color.withOpacity(0.3),
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildRotatingRing(
+      double size, double strokeWidth, Color color, double speed) {
+    return AnimatedBuilder(
+      animation: _rotationAnimation,
+      builder: (context, child) {
+        return Transform.rotate(
+          angle: _rotationAnimation.value * speed,
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: color.withOpacity(0.3),
+                width: strokeWidth,
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -124,152 +228,231 @@ class _SplashScreenState extends State<SplashScreen>
             ],
           ),
         ),
-        child: SafeArea(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Ripple Effect Background
-                AnimatedBuilder(
-                  animation: _rippleAnimation,
-                  builder: (context, child) {
-                    return Stack(
+        child: Stack(
+          children: [
+            // Floating Particles Background
+            _buildFloatingParticle(100, 50, 8, Colors.white, 0.0),
+            _buildFloatingParticle(
+                200, screenSize.width - 80, 12, Colors.white70, 0.3),
+            _buildFloatingParticle(350, 100, 6, Colors.white60, 0.6),
+            _buildFloatingParticle(500, screenSize.width - 120, 10,
+                Colors.white.withOpacity(0.8), 0.9),
+            _buildFloatingParticle(150, screenSize.width * 0.7, 14,
+                Colors.white.withOpacity(0.5), 0.2),
+            _buildFloatingParticle(400, 40, 9, Colors.white70, 0.7),
+
+            // Main Content
+            SafeArea(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    // Rotating Rings Background
+                    Stack(
                       alignment: Alignment.center,
                       children: [
-                        // Ripple circles
-                        for (int i = 0; i < 3; i++)
-                          Container(
-                            width: (150 + (i * 50)) * _rippleAnimation.value,
-                            height: (150 + (i * 50)) * _rippleAnimation.value,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: Colors.white.withOpacity(
-                                  (1 - _rippleAnimation.value) * 0.3,
-                                ),
-                                width: 2,
-                              ),
-                            ),
-                          ),
+                        _buildRotatingRing(250, 2, Colors.white, 0.5),
+                        _buildRotatingRing(200, 3, Colors.white, -0.8),
+                        _buildRotatingRing(300, 1, Colors.white, 1.2),
 
-                        // Logo Container with Shadow
+                        // Logo with Slide Animation
                         AnimatedBuilder(
                           animation: _logoController,
                           builder: (context, child) {
-                            return Transform.scale(
-                              scale: _logoScaleAnimation.value,
+                            return Transform.translate(
+                              offset: Offset(0, _logoSlideAnimation.value),
                               child: Opacity(
-                                opacity: _logoOpacityAnimation.value,
-                                child: Container(
-                                  width: isTablet ? 200 : 150,
-                                  height: isTablet ? 200 : 150,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    color: Colors.white.withOpacity(0.1),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.1),
-                                        blurRadius: 20,
-                                        spreadRadius: 5,
+                                opacity: _logoFadeAnimation.value,
+                                child: AnimatedBuilder(
+                                  animation: _pulseAnimation,
+                                  builder: (context, child) {
+                                    return Transform.scale(
+                                      scale: _pulseAnimation.value,
+                                      child: Container(
+                                        width: isTablet ? 180 : 140,
+                                        height: isTablet ? 180 : 140,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.white.withOpacity(0.15),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color:
+                                                  Colors.black.withOpacity(0.2),
+                                              blurRadius: 30,
+                                              spreadRadius: 10,
+                                            ),
+                                            BoxShadow(
+                                              color:
+                                                  Colors.white.withOpacity(0.3),
+                                              blurRadius: 20,
+                                              spreadRadius: -5,
+                                            ),
+                                          ],
+                                        ),
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(25),
+                                          child: Image.asset(
+                                            'assets/images/Logo.png',
+                                            fit: BoxFit.contain,
+                                          ),
+                                        ),
                                       ),
-                                    ],
-                                  ),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(20),
-                                    child: Image.asset(
-                                      'assets/images/Logo.png',
-                                      fit: BoxFit.contain,
-                                    ),
-                                  ),
+                                    );
+                                  },
                                 ),
                               ),
                             );
                           },
                         ),
                       ],
-                    );
-                  },
-                ),
+                    ),
 
-                SizedBox(height: screenSize.height * 0.08),
+                    SizedBox(height: screenSize.height * 0.08),
 
-                // App Name with Animation
-                AnimatedBuilder(
-                  animation: _textOpacityAnimation,
-                  builder: (context, child) {
-                    return Opacity(
-                      opacity: _textOpacityAnimation.value,
-                      child: Column(
-                        children: [
-                          Text(
-                            'GiziKu',
-                            style: TextStyle(
-                              fontSize: isTablet ? 42 : 36,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              letterSpacing: 2,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black.withOpacity(0.3),
-                                  offset: const Offset(2, 2),
-                                  blurRadius: 4,
+                    // App Name with Slide Animation
+                    AnimatedBuilder(
+                      animation: _textController,
+                      builder: (context, child) {
+                        return Transform.translate(
+                          offset: Offset(0, _textSlideAnimation.value),
+                          child: Opacity(
+                            opacity: _textFadeAnimation.value,
+                            child: Column(
+                              children: [
+                                // Main Title with Gradient Text Effect
+                                ShaderMask(
+                                  shaderCallback: (bounds) =>
+                                      const LinearGradient(
+                                    colors: [Colors.white, Colors.white70],
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                  ).createShader(bounds),
+                                  child: Text(
+                                    'GiziKu',
+                                    style: TextStyle(
+                                      fontSize: isTablet ? 48 : 42,
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
+                                      letterSpacing: 3,
+                                      shadows: [
+                                        Shadow(
+                                          color: Colors.black.withOpacity(0.4),
+                                          offset: const Offset(3, 3),
+                                          blurRadius: 8,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+
+                                // Subtitle with typewriter effect
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 20, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.2),
+                                    borderRadius: BorderRadius.circular(25),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.3),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Aplikasi Pemantauan Gizi Anak',
+                                    style: TextStyle(
+                                      fontSize: isTablet ? 18 : 16,
+                                      color: Colors.white.withOpacity(0.95),
+                                      fontWeight: FontWeight.w500,
+                                      letterSpacing: 1,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Aplikasi Pemantauan Gizi Anak',
-                            style: TextStyle(
-                              fontSize: isTablet ? 18 : 16,
-                              color: Colors.white.withOpacity(0.9),
-                              fontWeight: FontWeight.w400,
-                              letterSpacing: 0.5,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+                        );
+                      },
+                    ),
 
-                SizedBox(height: screenSize.height * 0.1),
+                    SizedBox(height: screenSize.height * 0.08),
 
-                // Loading Indicator
-                AnimatedBuilder(
-                  animation: _textOpacityAnimation,
-                  builder: (context, child) {
-                    return Opacity(
-                      opacity: _textOpacityAnimation.value,
-                      child: Column(
-                        children: [
-                          SizedBox(
-                            width: isTablet ? 30 : 24,
-                            height: isTablet ? 30 : 24,
-                            child: const CircularProgressIndicator(
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
-                              strokeWidth: 3,
-                            ),
+                    // Loading Indicator with enhanced animation
+                    AnimatedBuilder(
+                      animation: _textController,
+                      builder: (context, child) {
+                        return Opacity(
+                          opacity: _textFadeAnimation.value * 0.8,
+                          child: Column(
+                            children: [
+                              Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  // Outer rotating circle
+                                  AnimatedBuilder(
+                                    animation: _rotationController,
+                                    builder: (context, child) {
+                                      return Transform.rotate(
+                                        angle: _rotationAnimation.value,
+                                        child: Container(
+                                          width: 50,
+                                          height: 50,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color:
+                                                  Colors.white.withOpacity(0.3),
+                                              width: 2,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                  // Inner loading indicator
+                                  SizedBox(
+                                    width: isTablet ? 32 : 28,
+                                    height: isTablet ? 32 : 28,
+                                    child: CircularProgressIndicator(
+                                      valueColor:
+                                          const AlwaysStoppedAnimation<Color>(
+                                              Colors.white),
+                                      strokeWidth: 3,
+                                      backgroundColor:
+                                          Colors.white.withOpacity(0.2),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(15),
+                                ),
+                                child: Text(
+                                  'Memuat aplikasi...',
+                                  style: TextStyle(
+                                    fontSize: isTablet ? 16 : 14,
+                                    color: Colors.white.withOpacity(0.9),
+                                    fontWeight: FontWeight.w400,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Memuat aplikasi...',
-                            style: TextStyle(
-                              fontSize: isTablet ? 16 : 14,
-                              color: Colors.white.withOpacity(0.8),
-                              fontWeight: FontWeight.w300,
-                            ),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                        );
+                      },
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
