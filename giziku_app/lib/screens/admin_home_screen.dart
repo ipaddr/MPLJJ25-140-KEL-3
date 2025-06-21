@@ -17,7 +17,12 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
   String _namaAdmin = "Admin";
   bool _isLoading = true;
 
-  Map<String, int> _statusGiziData = {};
+  // Data Status Gizi dari admin dashboard makanan
+  int _totalCekGizi = 0;
+  int _cekGiziBulanIni = 0;
+  Map<String, int> _statusGiziDistribution = {};
+  List<Map<String, dynamic>> _recentCekGizi = [];
+
   List<Map<String, dynamic>> _recentActivities = [];
 
   late AnimationController _animationController;
@@ -76,15 +81,17 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
 
   Future<void> _loadStatistikData() async {
     try {
-      print('Mulai loading statistik data...'); // Debug log
+      if (mounted) {
+        setState(() {
+          _isLoading = true;
+        });
+      }
 
-      // Load status gizi anak (dari collection riwayatCekGizi)
-      await _loadStatusGizi();
+      // Load data Status Gizi dari riwayatCekGizi
+      await _loadStatusGiziData();
 
       // Load aktivitas terbaru
       await _loadRecentActivities();
-
-      print('Selesai loading statistik data'); // Debug log
 
       if (mounted) {
         setState(() {
@@ -92,7 +99,6 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
         });
       }
     } catch (e) {
-      print('Error loading statistik data: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -101,47 +107,65 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
     }
   }
 
-  Future<void> _loadStatusGizi() async {
+  Future<void> _loadStatusGiziData() async {
     try {
-      // Ambil data status gizi terbaru untuk setiap anak
-      final giziSnapshot = await FirebaseFirestore.instance
+      // Load semua data riwayat cek gizi
+      final riwayatGiziSnapshot = await FirebaseFirestore.instance
           .collection('riwayatCekGizi')
           .orderBy('tanggalPengecekan', descending: true)
           .get();
 
-      Map<String, String> latestStatusByUser = {};
-      Map<String, int> statusCount = {
-        'Normal': 0,
-        'Kurang': 0,
-        'Berlebih': 0,
-        'Obesitas': 0,
-      };
+      Map<String, int> statusCount = {};
+      List<Map<String, dynamic>> recentData = [];
+      int bulanIniCount = 0;
 
-      // Ambil status terbaru untuk setiap user
-      for (var doc in giziSnapshot.docs) {
+      final now = DateTime.now();
+      final startOfMonth = DateTime(now.year, now.month, 1);
+      final startOfNextMonth = (now.month == 12)
+          ? DateTime(now.year + 1, 1, 1)
+          : DateTime(now.year, now.month + 1, 1);
+
+      for (var doc in riwayatGiziSnapshot.docs) {
         final data = doc.data();
-        final userId = data['userId'] as String;
-        final status = data['statusGizi'] as String? ?? 'Normal';
+        final statusGizi = data['statusGizi'] as String? ?? 'Tidak Diketahui';
+        final tanggalPengecekan = data['tanggalPengecekan'] as Timestamp?;
 
-        if (!latestStatusByUser.containsKey(userId)) {
-          latestStatusByUser[userId] = status;
+        // Hitung distribusi status gizi
+        statusCount[statusGizi] = (statusCount[statusGizi] ?? 0) + 1;
+
+        // Hitung cek gizi bulan ini
+        if (tanggalPengecekan != null) {
+          final tanggal = tanggalPengecekan.toDate();
+          if (tanggal.isAfter(startOfMonth) &&
+              tanggal.isBefore(startOfNextMonth)) {
+            bulanIniCount++;
+          }
         }
-      }
 
-      // Hitung jumlah setiap status
-      for (var status in latestStatusByUser.values) {
-        if (statusCount.containsKey(status)) {
-          statusCount[status] = statusCount[status]! + 1;
+        // Simpan data terbaru (maksimal 10)
+        if (recentData.length < 10) {
+          recentData.add({
+            'nama': data['nama'] ?? 'Tidak diketahui',
+            'statusGizi': statusGizi,
+            'usia': data['usia'] ?? 0,
+            'beratBadan': data['beratBadan'] ?? 0.0,
+            'tinggiBadan': data['tinggiBadan'] ?? 0.0,
+            'imt': data['imt'] ?? 0.0,
+            'tanggalPengecekan': tanggalPengecekan,
+          });
         }
       }
 
       if (mounted) {
         setState(() {
-          _statusGiziData = statusCount;
+          _totalCekGizi = riwayatGiziSnapshot.docs.length;
+          _cekGiziBulanIni = bulanIniCount;
+          _statusGiziDistribution = statusCount;
+          _recentCekGizi = recentData;
         });
       }
     } catch (e) {
-      print('Error loading status gizi: $e');
+      print('Error loading status gizi data: $e');
     }
   }
 
@@ -172,7 +196,7 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
           'subtitle': 'Status: ${data['statusGizi'] ?? 'Normal'}',
           'time': data['tanggalPengecekan'] as Timestamp,
           'icon': Icons.health_and_safety,
-          'color': _getColorForStatus(data['statusGizi']),
+          'color': _getStatusGiziColor(data['statusGizi']),
         });
       }
 
@@ -205,18 +229,27 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
     }
   }
 
-  Color _getColorForStatus(String? status) {
-    switch (status) {
-      case 'Normal':
-        return const Color(0xFF4CAF50);
-      case 'Kurang':
-        return const Color(0xFFFF9800);
-      case 'Berlebih':
-        return const Color(0xFFFF5722);
-      case 'Obesitas':
-        return const Color(0xFFD32F2F);
+  Color _getStatusGiziColor(String? status) {
+    if (status == null) return Colors.grey;
+
+    switch (status.toLowerCase()) {
+      case 'gizi baik':
+      case 'normal':
+        return Colors.green;
+      case 'gizi kurang':
+      case 'underweight':
+        return Colors.orange;
+      case 'gizi buruk':
+      case 'severely underweight':
+        return Colors.red;
+      case 'gizi lebih':
+      case 'overweight':
+        return Colors.blue;
+      case 'obesitas':
+      case 'obese':
+        return Colors.purple;
       default:
-        return const Color(0xFF9E9E9E);
+        return Colors.grey;
     }
   }
 
@@ -385,11 +418,18 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Statistik Cards (dihapus)
-                            // const SizedBox(height: 24), // Dihapus jika tidak ada statistik card di atasnya
+                            // Status Gizi Summary Cards
+                            _buildStatusGiziSummary(),
 
-                            // Status Gizi Chart
-                            _buildStatusGiziChart(),
+                            const SizedBox(height: 24),
+
+                            // Distribusi Status Gizi
+                            _buildStatusGiziDistribution(),
+
+                            const SizedBox(height: 24),
+
+                            // Recent Cek Gizi
+                            _buildRecentCekGizi(),
 
                             const SizedBox(height: 24),
 
@@ -434,7 +474,98 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
     );
   }
 
-  Widget _buildStatusGiziChart() {
+  Widget _buildStatusGiziSummary() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '📊 Status Gizi Anak',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildSummaryCard(
+                'Total Cek Gizi',
+                _totalCekGizi.toString(),
+                Icons.assessment,
+                const Color(0xFF4CAF50),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildSummaryCard(
+                'Cek Bulan Ini',
+                _cekGiziBulanIni.toString(),
+                Icons.calendar_today,
+                const Color(0xFF2196F3),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryCard(
+      String title, String value, IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, color: color, size: 20),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2D3748),
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Color(0xFF718096),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusGiziDistribution() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -452,15 +583,15 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Status Gizi Anak',
+            'Total Status Gizi Anak',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
               color: Color(0xFF2D3748),
             ),
           ),
-          const SizedBox(height: 20),
-          if (_statusGiziData.isEmpty)
+          const SizedBox(height: 16),
+          if (_statusGiziDistribution.isEmpty)
             const Center(
               child: Text(
                 'Belum ada data status gizi',
@@ -468,14 +599,57 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
               ),
             )
           else
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: _statusGiziData.entries.map((entry) {
-                return _buildBar(
-                  entry.key,
-                  entry.value,
-                  _getColorForStatus(entry.key),
+            Column(
+              children: _statusGiziDistribution.entries.map((entry) {
+                final total =
+                    _statusGiziDistribution.values.reduce((a, b) => a + b);
+                final percentage = (entry.value / total) * 100;
+
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 12,
+                                height: 12,
+                                decoration: BoxDecoration(
+                                  color: _getStatusGiziColor(entry.key),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                entry.key,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Text(
+                            '${entry.value} (${percentage.toStringAsFixed(1)}%)',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      LinearProgressIndicator(
+                        value: percentage / 100,
+                        backgroundColor: Colors.grey.shade200,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          _getStatusGiziColor(entry.key),
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               }).toList(),
             ),
@@ -484,39 +658,105 @@ class _AdminHomeScreenState extends State<AdminHomeScreen>
     );
   }
 
-  Widget _buildBar(String label, int value, Color color) {
-    final maxValue = _statusGiziData.values.isEmpty
-        ? 1
-        : _statusGiziData.values.reduce((a, b) => a > b ? a : b);
-    final normalizedHeight = maxValue == 0 ? 0.0 : (value / maxValue) * 100;
+  Widget _buildRecentCekGizi() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Cek Gizi Terbaru',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF2D3748),
+            ),
+          ),
+          const SizedBox(height: 16),
+          if (_recentCekGizi.isEmpty)
+            const Center(
+              child: Text(
+                'Belum ada data cek gizi',
+                style: TextStyle(color: Color(0xFF718096)),
+              ),
+            )
+          else
+            Column(
+              children: _recentCekGizi.map((data) {
+                final tanggal = data['tanggalPengecekan'] as Timestamp?;
+                final tanggalStr = tanggal != null
+                    ? DateFormat('dd/MM/yyyy').format(tanggal.toDate())
+                    : 'Tidak diketahui';
 
-    return Column(
-      children: [
-        Container(
-          height: normalizedHeight + 20, // Minimum height 20
-          width: 40.0,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value.toString(),
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Color(0xFF718096),
-          ),
-        ),
-      ],
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF7FAFC),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: _getStatusGiziColor(data['statusGizi'])
+                              .withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          Icons.person,
+                          color: _getStatusGiziColor(data['statusGizi']),
+                          size: 16,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              data['nama'],
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                              ),
+                            ),
+                            Text(
+                              '${data['statusGizi']} | ${data['usia']} th | IMT: ${data['imt'].toStringAsFixed(1)}',
+                              style: const TextStyle(
+                                color: Color(0xFF718096),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        tanggalStr,
+                        style: const TextStyle(
+                          color: Color(0xFF718096),
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }).toList(),
+            ),
+        ],
+      ),
     );
   }
 

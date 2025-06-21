@@ -521,14 +521,71 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Navigasi ke layar chatbot
-          Navigator.pushNamed(context, '/chatbot');
-        },
-        tooltip: 'Chat dengan Bot', // Opsional: tooltip untuk aksesibilitas
-        child: const Icon(Icons.chat), // Ikon untuk tombol
+      floatingActionButton: Container(
+        width: 70,
+        height: 70,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF667eea),
+              Color(0xFF764ba2),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(35),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF667eea).withOpacity(0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          onPressed: () {
+            Navigator.pushNamed(context, '/chatbot');
+          },
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          tooltip: 'Chat dengan GizBot',
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Pulse animation background
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(25),
+                ),
+              ),
+              // Main icon
+              const Icon(
+                Icons.smart_toy_rounded,
+                size: 30,
+                color: Colors.white,
+              ),
+              // Online indicator dot
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  width: 12,
+                  height: 12,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4CAF50),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: Colors.white, width: 2),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       drawer: _buildModernDrawer(),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -850,11 +907,15 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                 ],
               ),
             ),
+            _buildDrawerItem(Icons.smart_toy_rounded, 'Chat dengan GizBot', () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, '/chatbot');
+            }),
+            const Divider(color: Colors.white24),
             _buildDrawerItem(Icons.person_outline, 'Profil', () {
               Navigator.pop(context);
               Navigator.pushNamed(context, '/profile');
             }),
-            const Divider(color: Colors.white24),
             _buildDrawerItem(Icons.monitor_heart, 'Pemantauan Gizi', () {
               Navigator.pop(context);
               Navigator.pushNamed(context, '/pemantauan_gizi').then((_) {

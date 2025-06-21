@@ -16,12 +16,33 @@ class _AdminKelolaEdukasiScreenState extends State<AdminKelolaEdukasiScreen> {
   int _selectedIndex = 2;
   bool _isLoading = true;
   List<Map<String, dynamic>> _edukasiList = [];
-  final String _namaAdmin = 'Administrator';
+  String _namaAdmin = 'Administrator';
 
   @override
   void initState() {
     super.initState();
+    _loadAdminData();
     _loadEdukasiData();
+  }
+
+  Future<void> _loadAdminData() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        final adminDoc = await FirebaseFirestore.instance
+            .collection('admins')
+            .doc(user.uid)
+            .get();
+
+        if (adminDoc.exists && mounted) {
+          setState(() {
+            _namaAdmin = adminDoc.data()?['nama'] ?? 'Administrator';
+          });
+        }
+      } catch (e) {
+        print('Error loading admin data: $e');
+      }
+    }
   }
 
   Future<void> _loadEdukasiData() async {
@@ -149,6 +170,9 @@ class _AdminKelolaEdukasiScreenState extends State<AdminKelolaEdukasiScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isTablet = screenSize.width > 600;
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -164,8 +188,9 @@ class _AdminKelolaEdukasiScreenState extends State<AdminKelolaEdukasiScreen> {
         ),
         child: CustomScrollView(
           slivers: [
+            // Modern SliverAppBar (sama dengan admin home screen)
             SliverAppBar(
-              expandedHeight: 120,
+              expandedHeight: isTablet ? 200 : 180,
               floating: false,
               pinned: true,
               backgroundColor: Colors.transparent,
@@ -180,15 +205,14 @@ class _AdminKelolaEdukasiScreenState extends State<AdminKelolaEdukasiScreen> {
                   icon: const Icon(Icons.refresh, color: Colors.white),
                   onPressed: _loadEdukasiData,
                 ),
+                IconButton(
+                  icon: const Icon(Icons.logout, color: Colors.white),
+                  onPressed: () async {
+                    _showLogoutConfirmation();
+                  },
+                ),
               ],
               flexibleSpace: FlexibleSpaceBar(
-                title: const Text(
-                  'Kelola Edukasi',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
                 background: Container(
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
@@ -199,6 +223,74 @@ class _AdminKelolaEdukasiScreenState extends State<AdminKelolaEdukasiScreen> {
                         Color(0xFF388E3C),
                         Color(0xFF43A047),
                       ],
+                    ),
+                  ),
+                  child: SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(50),
+                                ),
+                                child: const Icon(
+                                  Icons.school,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Kelola Edukasi',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Selamat datang, $_namaAdmin',
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 16,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Text(
+                              'Kelola konten edukasi gizi dengan mudah 📚',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -508,11 +600,9 @@ class _AdminKelolaEdukasiScreenState extends State<AdminKelolaEdukasiScreen> {
                 ],
               ),
             ),
-            // 🔧 NAVIGASI KE ADMIN HOME SCREEN
             _buildDrawerItem(Icons.home, 'Dashboard Home', () {
               Navigator.pop(context);
-              Navigator.pushReplacementNamed(
-                  context, '/admin_home'); // ✅ Navigasi ke admin home
+              Navigator.pushReplacementNamed(context, '/admin_home');
             }),
             _buildDrawerItem(Icons.restaurant_menu, 'Dashboard Makanan', () {
               Navigator.pop(context);
@@ -521,11 +611,9 @@ class _AdminKelolaEdukasiScreenState extends State<AdminKelolaEdukasiScreen> {
             }),
             _buildDrawerItem(Icons.school, 'Kelola Edukasi', () {
               Navigator.pop(context);
-              // Sudah di halaman Kelola Edukasi, tidak perlu navigasi
-            }, isActive: true), // ✅ Set active karena sedang di halaman ini
+            }, isActive: true),
             const Divider(color: Colors.white24),
             _buildDrawerItem(Icons.logout, 'Logout', () async {
-              // Show confirmation dialog before logout
               _showLogoutConfirmation();
             }),
           ],
@@ -534,7 +622,6 @@ class _AdminKelolaEdukasiScreenState extends State<AdminKelolaEdukasiScreen> {
     );
   }
 
-  // 🔧 MENAMBAHKAN KONFIRMASI LOGOUT
   void _showLogoutConfirmation() {
     showDialog(
       context: context,

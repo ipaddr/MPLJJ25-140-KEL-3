@@ -17,15 +17,36 @@ class _AdminDashboardMakananScreenState
   bool _isLoading = true;
   String _namaAdmin = 'Admin';
 
-  // int _totalStock = 0; // REMOVED
-  int _bantuanBulanIni = 0; // ADDED
+  // Hanya Data Makanan
+  int _bantuanBulanIni = 0;
   int _totalPaket = 0;
   Map<int, int> _paketDistribution = {};
 
   @override
   void initState() {
     super.initState();
-    _loadDashboardData(); // Renamed from _loadMakananData
+    _loadAdminData();
+    _loadDashboardData();
+  }
+
+  Future<void> _loadAdminData() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        final adminDoc = await FirebaseFirestore.instance
+            .collection('admins')
+            .doc(user.uid)
+            .get();
+
+        if (adminDoc.exists && mounted) {
+          setState(() {
+            _namaAdmin = adminDoc.data()?['nama'] ?? 'Admin';
+          });
+        }
+      } catch (e) {
+        print('Error loading admin data: $e');
+      }
+    }
   }
 
   Future<void> _loadDashboardData() async {
@@ -33,63 +54,13 @@ class _AdminDashboardMakananScreenState
     setState(() {
       _isLoading = true;
     });
+
     try {
-      // 1. Load data untuk distribusi paket makanan
-      final makananSnapshot = await FirebaseFirestore.instance
-          .collection('riwayatAmbilMakanan')
-          .get();
-
-      Map<int, int> paketCount = {};
-
-      for (var doc in makananSnapshot.docs) {
-        final data = doc.data();
-        final tipePaket = data['tipeMakanan'] as int? ?? 1;
-
-        paketCount[tipePaket] = (paketCount[tipePaket] ?? 0) + 1;
-        // totalDistributed++; // Not strictly needed for this screen's display anymore
-      }
-
-      // 2. Load data untuk bantuan bulan ini
-      int currentMonthBantuan = 0;
-      final now = DateTime.now();
-      final startOfMonth = DateTime(now.year, now.month, 1);
-      final startOfNextMonth = (now.month == 12)
-          ? DateTime(now.year + 1, 1, 1)
-          : DateTime(now.year, now.month + 1, 1);
-
-      try {
-        final bantuanSnapshot = await FirebaseFirestore.instance
-            .collection('riwayatAmbilMakanan')
-            .where('timestamp',
-                isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
-            .where('timestamp',
-                isLessThan: Timestamp.fromDate(startOfNextMonth))
-            .get();
-        currentMonthBantuan = bantuanSnapshot.docs.length;
-      } catch (e) {
-        print(
-            'Error loading bantuan bulan ini using timestamp field: $e. Trying "tanggal" field.');
-        // Fallback to 'tanggal' field if 'timestamp' fails
-        try {
-          final bantuanSnapshotFallback = await FirebaseFirestore.instance
-              .collection('riwayatAmbilMakanan')
-              .where('tanggal',
-                  isGreaterThanOrEqualTo: Timestamp.fromDate(startOfMonth))
-              .where('tanggal',
-                  isLessThan: Timestamp.fromDate(startOfNextMonth))
-              .get();
-          currentMonthBantuan = bantuanSnapshotFallback.docs.length;
-        } catch (e2) {
-          print('Error loading bantuan bulan ini using tanggal field: $e2');
-          currentMonthBantuan = 0; // Default to 0 if both attempts fail
-        }
-      }
+      // Hanya load data distribusi makanan
+      await _loadDistribusiMakananData();
 
       if (mounted) {
         setState(() {
-          _bantuanBulanIni = currentMonthBantuan;
-          _totalPaket = paketCount.length;
-          _paketDistribution = paketCount;
           _isLoading = false;
         });
       }
@@ -100,6 +71,51 @@ class _AdminDashboardMakananScreenState
           _isLoading = false;
         });
       }
+    }
+  }
+
+  Future<void> _loadDistribusiMakananData() async {
+    try {
+      // Load data distribusi makanan
+      final makananSnapshot = await FirebaseFirestore.instance
+          .collection('riwayatAmbilMakanan')
+          .get();
+
+      Map<int, int> paketCount = {};
+      int currentMonthBantuan = 0;
+
+      final now = DateTime.now();
+      final startOfMonth = DateTime(now.year, now.month, 1);
+      final startOfNextMonth = (now.month == 12)
+          ? DateTime(now.year + 1, 1, 1)
+          : DateTime(now.year, now.month + 1, 1);
+
+      for (var doc in makananSnapshot.docs) {
+        final data = doc.data();
+        final tipePaket = data['tipeMakanan'] as int? ?? 1;
+        paketCount[tipePaket] = (paketCount[tipePaket] ?? 0) + 1;
+
+        // Hitung bantuan bulan ini
+        final timestamp =
+            data['timestamp'] as Timestamp? ?? data['tanggal'] as Timestamp?;
+        if (timestamp != null) {
+          final tanggal = timestamp.toDate();
+          if (tanggal.isAfter(startOfMonth) &&
+              tanggal.isBefore(startOfNextMonth)) {
+            currentMonthBantuan++;
+          }
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _bantuanBulanIni = currentMonthBantuan;
+          _totalPaket = paketCount.length;
+          _paketDistribution = paketCount;
+        });
+      }
+    } catch (e) {
+      print('Error loading distribusi makanan data: $e');
     }
   }
 
@@ -122,6 +138,9 @@ class _AdminDashboardMakananScreenState
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final isTablet = screenSize.width > 600;
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -137,8 +156,9 @@ class _AdminDashboardMakananScreenState
         ),
         child: CustomScrollView(
           slivers: [
+            // Modern SliverAppBar (sama dengan admin home screen)
             SliverAppBar(
-              expandedHeight: 120,
+              expandedHeight: isTablet ? 200 : 180,
               floating: false,
               pinned: true,
               backgroundColor: Colors.transparent,
@@ -152,18 +172,17 @@ class _AdminDashboardMakananScreenState
                 IconButton(
                   icon: const Icon(Icons.refresh, color: Colors.white),
                   onPressed: () {
-                    _loadDashboardData(); // Call the updated data loading function
+                    _loadDashboardData();
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.logout, color: Colors.white),
+                  onPressed: () async {
+                    _showLogoutConfirmation();
                   },
                 ),
               ],
               flexibleSpace: FlexibleSpaceBar(
-                title: const Text(
-                  'Dashboard Makanan',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
                 background: Container(
                   decoration: const BoxDecoration(
                     gradient: LinearGradient(
@@ -174,6 +193,74 @@ class _AdminDashboardMakananScreenState
                         Color(0xFF388E3C),
                         Color(0xFF43A047),
                       ],
+                    ),
+                  ),
+                  child: SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.all(20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(50),
+                                ),
+                                child: const Icon(
+                                  Icons.restaurant_menu,
+                                  color: Colors.white,
+                                  size: 24,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Dashboard Makanan',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Selamat datang, $_namaAdmin',
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 16,
+                                      ),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Text(
+                              'Kelola distribusi makanan bergizi 🍽️',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -187,28 +274,8 @@ class _AdminDashboardMakananScreenState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          // Summary Cards
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildSummaryCard(
-                                  'Bantuan Bulan Ini', // CHANGED Title
-                                  _bantuanBulanIni.toString(), // CHANGED Value
-                                  Icons.card_giftcard, // CHANGED Icon (example)
-                                  Colors.orange, // CHANGED Color (example)
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: _buildSummaryCard(
-                                  'Jenis Paket',
-                                  _totalPaket.toString(),
-                                  Icons.category,
-                                  const Color(0xFF2196F3),
-                                ),
-                              ),
-                            ],
-                          ),
+                          // Makanan Summary Cards
+                          _buildMakananSummary(),
 
                           const SizedBox(height: 24),
 
@@ -234,6 +301,113 @@ class _AdminDashboardMakananScreenState
     );
   }
 
+  // ...existing code untuk widget lainnya...
+
+  void _showLogoutConfirmation() {
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: const Text(
+              'Konfirmasi Logout',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF2D3748),
+              ),
+            ),
+            content: const Text(
+              'Apakah Anda yakin ingin keluar dari panel admin?',
+              style: TextStyle(color: Color(0xFF718096)),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text(
+                  'Batal',
+                  style: TextStyle(color: Color(0xFF718096)),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  try {
+                    await FirebaseAuth.instance.signOut();
+                    if (mounted) {
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        '/login',
+                        (route) => false,
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error logout: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2E7D32),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text(
+                  'Logout',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          );
+        });
+  }
+
+  Widget _buildMakananSummary() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '🍽️ Distribusi Makanan',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: _buildSummaryCard(
+                'Bantuan Bulan Ini',
+                _bantuanBulanIni.toString(),
+                Icons.card_giftcard,
+                Colors.orange,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: _buildSummaryCard(
+                'Jenis Paket',
+                _totalPaket.toString(),
+                Icons.category,
+                const Color(0xFF2196F3),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _buildLoadingState() {
     return Container(
       height: 300,
@@ -248,7 +422,7 @@ class _AdminDashboardMakananScreenState
           children: [
             CircularProgressIndicator(color: Color(0xFF2E7D32)),
             SizedBox(height: 16),
-            Text('Memuat data makanan...'),
+            Text('Memuat data dashboard...'),
           ],
         ),
       ),
@@ -398,7 +572,7 @@ class _AdminDashboardMakananScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Distribusi Terbaru',
+            'Distribusi Makanan Terbaru',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -545,15 +719,12 @@ class _AdminDashboardMakananScreenState
                 ],
               ),
             ),
-            // 🔧 NAVIGASI KE ADMIN HOME SCREEN
             _buildDrawerItem(Icons.home, 'Dashboard Home', () {
               Navigator.pop(context);
-              Navigator.pushReplacementNamed(
-                  context, '/admin_home'); // ✅ Navigasi ke admin home
+              Navigator.pushReplacementNamed(context, '/admin_home');
             }),
             _buildDrawerItem(Icons.restaurant_menu, 'Dashboard Makanan', () {
               Navigator.pop(context);
-              // Sudah di halaman Dashboard Makanan, tidak perlu navigasi
             }, isActive: true),
             _buildDrawerItem(Icons.school, 'Kelola Edukasi', () {
               Navigator.pop(context);
@@ -561,81 +732,11 @@ class _AdminDashboardMakananScreenState
             }),
             const Divider(color: Colors.white24),
             _buildDrawerItem(Icons.logout, 'Logout', () async {
-              // Show confirmation dialog before logout
               _showLogoutConfirmation();
             }),
           ],
         ),
       ),
-    );
-  }
-
-  // 🔧 MENAMBAHKAN KONFIRMASI LOGOUT
-  void _showLogoutConfirmation() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: const Text(
-            'Konfirmasi Logout',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF2D3748),
-            ),
-          ),
-          content: const Text(
-            'Apakah Anda yakin ingin keluar dari panel admin?',
-            style: TextStyle(color: Color(0xFF718096)),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
-                'Batal',
-                style: TextStyle(color: Color(0xFF718096)),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                try {
-                  await FirebaseAuth.instance.signOut();
-                  if (mounted) {
-                    Navigator.pushNamedAndRemoveUntil(
-                      context,
-                      '/login',
-                      (route) => false,
-                    );
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Error logout: $e'),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2E7D32),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                'Logout',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 
